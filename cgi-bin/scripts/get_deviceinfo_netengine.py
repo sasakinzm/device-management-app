@@ -12,7 +12,6 @@ class session_create_netengine(interfaceinfo):
     def __init__(self, host, domain, user, password):
         """
         Telnetログイン～ターミナル長制限解除までを実施
-        ◆引数
         host: ログイン先ホスト名のホスト部
         domain: ログイン先ホストのドメイン
         user: ログインするユーザ名
@@ -34,12 +33,12 @@ class session_create_netengine(interfaceinfo):
     def run(self, command):
         """
         任意のコマンドを実行する関数
-        ◆引数
         command: 実行するCLIコマンド
         """
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n<{0}>".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
+        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\n<{0}>".format(self.host), "")
         return stdout
 
 
@@ -79,7 +78,7 @@ class session_create_netengine(interfaceinfo):
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
         ifname = self.run("display interface | include current state")
-        ifname_list = ifname.split("\n")[2:-1]
+        ifname_list = ifname.split("\n")
         for i in ifname_list:
             if "Line protocol" in i : ifname_list.remove(i)
         ifname_list = [l.split()[0] for l in ifname_list]     ### インターフェース名を格納した配列に整形
@@ -124,7 +123,7 @@ class session_create_netengine(interfaceinfo):
                 if "Port BW:" in j:
                     for k in j.split(","):
                         if "Port BW:" in k: speed = k.replace("Port BW:", "").strip()
-                    interface_dict["speed"] = speed
+                interface_dict["speed"] = speed
                 if "Description:" in j:
                     description = j.replace("Description:", "")
                     interface_dict["description"] = description.replace("\r", "")

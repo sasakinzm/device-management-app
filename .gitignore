@@ -1,4 +1,5 @@
 .exe
 bin/
+__pycache__/
 .pyc
 get_sysinfo.py

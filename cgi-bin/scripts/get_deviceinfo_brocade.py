@@ -12,7 +12,6 @@ class session_create_brocade(interfaceinfo):
     def __init__(self, host, domain, user, password):
         """
         Telnetログイン～ターミナル長制限解除までを実施
-        ◆引数
         host: ログイン先ホスト名のホスト部
         domain: ログイン先ホストのドメイン
         user: ログインするユーザ名
@@ -34,13 +33,12 @@ class session_create_brocade(interfaceinfo):
     def run(self, command):
         """
         任意のコマンドを実行する関数
-        ◆引数
         command: 実行するCLIコマンド
         """
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n{0}#".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
-        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\n{0}#".format(host), "")
+        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\n{0}#".format(self.host), "")
         return stdout
 
 

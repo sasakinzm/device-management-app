@@ -32,6 +32,7 @@ class session_create_arista(interfaceinfo):
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n{0}>".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
+        stdout = stdout.replace("{0}\r\n".format(command), "").replace("\r\n{0}>".format(self.host), "")
         return stdout
 
     def get_sysinfo(self):
@@ -44,17 +45,17 @@ class session_create_arista(interfaceinfo):
         stdout_list = stdout.split("\n")
         for row in stdout_list:
             if row.startswith("Arista ") : model_row = row   # モデル名を含む行のみを抽出
-        self.model = model_row.split()[1].replace("\r", "")      # モデル名のみを抽出
+        self.model = model_row.split()[1].replace("\r", "").strip()      # モデル名のみを抽出
 
         ### OSバージョンを取得
         for row in stdout_list:
             if "Software image version:" in row: version_row = row   # バージョンを含む行のみを抽出
-        self.version = version_row.split(":")[1].replace("\r", "")       # バージョン番号のみを抽出
+        self.os_version = version_row.split(":")[1].replace("\r", "") .strip()      # バージョン番号のみを抽出
 
         ### 筐体シリアルナンバーを取得
         for row in stdout_list:
             if row.startswith("Serial number:") : serial_row = row   # シリアルを含む行のみを抽出
-        self.serial = serial_row.split(":")[1].replace("\r", "")       # シリアル番号のみを抽出
+        self.serial = serial_row.split(":")[1].replace("\r", "").strip()       # シリアル番号のみを抽出
         
 
     def get_interface(self):
@@ -64,7 +65,7 @@ class session_create_arista(interfaceinfo):
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
         stdout = self.run("show interface | include line protocol")
-        stdout_list = stdout.split("\n")[1:-2]
+        stdout_list = stdout.split("\n")
         stdout_list = [i.replace("is", "").replace("line protocol", "").replace("administratively ", "").replace("admintratively", "") for i in stdout_list]
         stdout_list = [i.split() for i in stdout_list]
         interfaces = []
@@ -110,7 +111,6 @@ class session_create_arista(interfaceinfo):
             key_diff = list(set(keys) - set(interface_dict.keys()))
             for key in key_diff:
                 interface_dict[key] = "-" 
-            print(interface_dict)
 
             interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"]))
 

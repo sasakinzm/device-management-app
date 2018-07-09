@@ -12,7 +12,6 @@ class session_create_ios(interfaceinfo):
     def __init__(self, host, domain, user, password):
         """
         Telnetログイン～ターミナル長制限解除までを実施
-        ◆引数
         host: ログイン先ホスト名のホスト部
         domain: ログイン先ホストのドメイン
         user: ログインするユーザ名
@@ -34,12 +33,12 @@ class session_create_ios(interfaceinfo):
     def run(self, command):
         """
         任意のコマンドを実行する関数
-        ◆引数
         command: 実行するCLIコマンド
         """
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n{0}>".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
+        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\n{0}>".format(self.host), "")
         return stdout
 
 
@@ -74,7 +73,7 @@ class session_create_ios(interfaceinfo):
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
         ifname = self.run("show interface | include line protocol")
-        ifname_list = ifname.split("\n")[1:-2]
+        ifname_list = ifname.split("\n")
         ifname_list = [i.split()[0] for i in ifname_list]
         interfaces = []
 
@@ -121,8 +120,9 @@ class session_create_ios(interfaceinfo):
                     interface_dict["description"] = description.replace("\r", "")
 
             ### lag_group_dict から物理インターフェースが所属するPort-channelポートを取得する
-            if i in lag_group_dict.keys():
-                interface_dict["lag_group"] = lag_group_dict[i]
+            short_ifname = i.replace("Port-channel", "Po").replace("FortyGigabitEthernet","Fo").replace("TenGigabitEthernet", "Te")
+            if short_ifname in lag_group_dict.keys():
+                interface_dict["lag_group"] = lag_group_dict[short_ifname]
 
             ### Port-channel インターフェースに対して、所属するメンバーポートを並べた配列を作る
             if "Port-channel" in interface_dict["name"]:

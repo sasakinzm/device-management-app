@@ -12,7 +12,6 @@ class session_create_cloudengine(interfaceinfo):
     def __init__(self, host, domain, user, password):
         """
         Telnetログイン～ターミナル長制限解除までを実施
-        ◆引数
         host: ログイン先ホスト名のホスト部
         domain: ログイン先ホストのドメイン
         user: ログインするユーザ名
@@ -34,12 +33,12 @@ class session_create_cloudengine(interfaceinfo):
     def run(self, command):
         """
         任意のコマンドを実行する関数
-        ◆引数
         command: 実行するCLIコマンド
         """
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n<{0}>".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
+        stdout = stdout.replace("{0}\r\n".format(command), "").replace("\r\n<{0}>".format(self.host), "")
         return stdout
 
 
@@ -79,7 +78,7 @@ class session_create_cloudengine(interfaceinfo):
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
         ifname = self.run("display interface | include current state : | exclude Line protocol")
-        ifname_list = [l.split()[0] for l in ifname.split("\n")[2:-1]]     ### インターフェース名を格納した配列に整形
+        ifname_list = [l.split()[0] for l in ifname.split("\n")[1:]]     ### インターフェース名を格納した配列に整形
 
         ### 物理インターフェースに対するEth-Trunk グループを決定するために、
         ### 物理インターフェースを key, EthTrunk グループをvalue とするディクショナリ(lag_group_dict)を作る(後で使う)

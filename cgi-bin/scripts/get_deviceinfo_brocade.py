@@ -40,7 +40,7 @@ class session_create_brocade(interfaceinfo):
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n{0}#".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
-        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\nnote-sw7#", "")
+        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\n{0}#".format(host), "")
         return stdout
 
 

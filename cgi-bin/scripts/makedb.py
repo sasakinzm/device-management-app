@@ -4,13 +4,13 @@
 import sys
 import io
 import mysql.connector
-import get_sysinfo
+from get_deviceinfo import *
 import configparser
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 ###############################################################################
-###  HTMLで表示するデータの元ネタ情報を収集し、テーブルに格納していくスクリプト
+###  HTMLで表示するデータの元ネタ情報を収集し、それらをテーブルに格納していくスクリプト
 
 
 #############################################
@@ -25,6 +25,7 @@ db_host = config["database"]["host"]
 
 username = config["device"]["username"]
 password = config["device"]["password"]
+domain = config["env"]["domain"]
 
 
 #############################################
@@ -35,73 +36,131 @@ conn = mysql.connector.connect(user=db_user, password=db_pass, database=db_name,
 cur = conn.cursor()
 
 ### ノード名、ベンダー名取得
-cur.execute("select name,type,mgmt_ip from node_master_list")
-temp = cur.fetchall()
+sql_select1 = '''
+             SELECT
+               name
+             , type
+             , mgmt_ip
+             FROM
+               node_master_list
+             '''
+cur.execute(sql_select1)
+data = cur.fetchall()
+
 node_list = []
-for i in temp:
-    d = {}
-    d["name"], d["type"], d["mgmt_ip"] = i
-    node_list.append(d)
+for i in data:
+    param_dict = {}
+    param_dict["name"], param_dict["type"], param_dict["mgmt_ip"] = i
+    node_list.append(param_dict)
 
 ### node_listテーブルの既存データを削除
-cur.execute("delete from node_list")
+cur.execute("DELETE FROM node_list")
 
 ### モデル名、シリアルNo、バージョンを取得して、
 ### [ホスト名, モデル名, ベンダー名, シリアルNo, バージョン] の順にDBに格納
 
-sysinfo = get_sysinfo.session()
-function_dict = {
-                 "junos": sysinfo.junos, 
-                 "catalyst": sysinfo.ios, 
-                 "cisco": sysinfo.ios, 
-                 "asr": sysinfo.iosxr, 
-                 "cloudengine": sysinfo.cloudengine, 
-                 "netengine": sysinfo.netengine, 
-                 "brocade": sysinfo.nos, 
-                 "arista": sysinfo.arista
+ostype_dict = {"juniper": "junos", 
+                 "catalyst": "ios", 
+                 "cisco": "ios", 
+                 "asr": "iosxr", 
+                 "cloudengine": "cloudengine", 
+                 "netengine": "netengine", 
+                 "brocade": "brocade", 
+                 "arista": "arista"
                 }
 
-for d in node_list:
-    host, type, mgmt_ip = d["name"], d["type"], d["mgmt_ip"]
+for dict in node_list:
     try:
-        function_dict[d["type"]](host, username,password)
-        model, version, serial = sysinfo.model, sysinfo.os_version, sysinfo.serial
-        sql_insert = 'insert into node_list(name, model, type, serial, version, mgmt_ip) values("%s", "%s", "%s", "%s", "%s", "%s")' % (host, model, type, serial, version, mgmt_ip)
+        host = dict["name"]
+        type = dict["type"]
+        ostype = ostype_dict[dict["type"]]
+        mgmt_ip = dict["mgmt_ip"]
+
+        session = session_create(host, domain, username, password, ostype)
+        session.get_sysinfo()
+        model = session.model
+        version = session.os_version
+        serial = session.serial
+
+        sql_insert = '''
+                     INSERT INTO
+                       node_list
+                     (
+                       name
+                     , model
+                     , type
+                     , serial
+                     , version, mgmt_ip
+                     ) VALUES (
+                       "{0}", "{1}", "{2}", "{3}", "{4}", "{5}"
+                     )
+                     '''.format(host, model, type, serial, version, mgmt_ip)
+
         cur.execute(sql_insert)
         conn.commit()
+        session.close()
     except:
         pass
+
 
 
 #############################################
 ### インターフェース一覧テーブル(node_list)作成
 
 ### ノード名、ベンダー名取得
-cur.execute("select name,type from node_master_list")
+sql_select2 = '''
+              SELECT
+                name
+              , type
+              FROM
+               node_master_list
+              '''
+cur.execute(sql_select2)
 nodes = cur.fetchall()
 
 ### interface_listテーブルのデータを削除
-cur.execute("delete from interface_list")
+cur.execute("DELETE FROM interface_list")
 
 ### モデル名取得し、それをもとにインターフェースの情報を取得
-### [ホスト名, 物理インターフェース名, 帯域幅, リンク状態, Description] の順にDBに格納
-for i in range(len(nodes)):
-    hostname = nodes[i][0]
-    type = nodes[i][1]
-    if type == "juniper":
-        if_list = get_interface_juniper(hostname)
-        for interface in if_list:
-            bandwidth, link_state, description = get_interface_info_juniper(hostname, interface)
-            sql_insert = 'insert into interface_list(hostname, physical_interface, bandwidth, link_state, description) values("%s", "%s", "%s", "%s", "%s")' % (hostname, interface, bandwidth, link_state, description)
+### [ホスト名, インターフェース名, Adminステート, リンク状態, 帯域幅, LAGグループ, LAGメンバー, Description] の順にDBに格納
+
+for dict in node_list:
+    try:
+        host = dict["name"]
+        ostype = ostype_dict[dict["type"]]
+
+        session = session_create(host, domain, username, password, ostype)
+        interfaces = session.get_interfaceinfo()
+        for i in interfaces:
+            ifname = i.name
+            admin_state = i.admin_state
+            link_state = i.link_state
+            speed = i.speed
+            lag_group = i.lag_group
+            lag_member = i.lag_member
+            description = i.description
+
+            sql_insert = '''
+                         INSERT
+                         INTO
+                           interface_list
+                         (
+                           hostname
+                         , interface_name
+                         , admin_state
+                         , link_state
+                         , bandwidth
+                         , lag_group
+                         , lag_member
+                         , description
+                         ) VALUES (
+                           "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}"
+                         )
+                         ''' % (host, ifname, admin_state, link_state, speed, lag_group, lag_member, description)
+
             cur.execute(sql_insert)
             conn.commit()
-    elif type == "cisco":
-        pass
-    elif type == "huawei":
-        pass
-    elif type == "brocade":
-        pass
-    elif type == "arista":
+    except:
         pass
 
 

@@ -8,3 +8,5 @@ host:
 username:
 password:
 
+[env]
+domain:

@@ -46,7 +46,7 @@ class session_create_netengine(interfaceinfo):
     def get_sysinfo(self):
         """
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数
-        それぞれ、name, os_version, serial というメソッドに格納する。返り値はそれらのディクショナリ。
+        それぞれ、name, os_version, serial というメソッドに格納する。
         """
         ### モデル名を取得
         stdout = self.run("display inventory chassis")

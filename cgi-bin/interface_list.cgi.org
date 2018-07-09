@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+import io
+import mysql.connector
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+####################################
+# DB 接続
+
+conn = mysql.connector.connect(user="root", password="password", database="device_management", host="localhost")
+cur = conn.cursor()
+sql = "select * from interface_list"
+cur.execute(sql)
+rows = cur.fetchall()
+
+
+####################################
+# HTML 作成
+
+print("Content-type: text/html; charset=UTF-8")
+print("")
+print("<html>")
+print("<head>")
+print("<title>test</title>")
+print("</head>")
+print("<body>")
+
+print("<table border=1 width='100%'>")
+print("<tr>")
+print("<td>ホスト名</td>")
+print("<td>物理IF</td>")
+print("<td>帯域幅</td>")
+print("<td>リンク状態</td>")
+print("<td>Description</td>")
+print("</tr>")
+for row in rows:
+    hostname, physical_interface, bandwidth, link_state, description = row
+    print("<tr>")
+    print("<td>%s</td>" %(hostname))
+    print("<td>%s</td>" %(physical_interface))
+    print("<td>%s</td>" %(bandwidth))
+    print("<td>%s</td>" %(link_state))
+    print("<td>%s</td>" %(description))
+    print("</tr>")
+print("</table>")
+
+print("</body>")
+print("</html>")
+
+cur.close()
+conn.close()

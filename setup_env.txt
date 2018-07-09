@@ -1,0 +1,13 @@
+
+python3.6u
+sudo pip3 install paramiko
+sudo pip3 install lxml
+sudo pip3 install libxml2
+sudo pip3 install libxslt1
+sudo yum install libxml2-dev
+sudo yum install libxslt1-dev
+sudo pip3 install ncclient
+sudo pip3 install mysql-connector-python
+
+
+

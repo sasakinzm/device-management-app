@@ -1,0 +1,10 @@
+[database]
+username: 
+password: 
+database: 
+host:
+
+[device]
+username:
+password:
+

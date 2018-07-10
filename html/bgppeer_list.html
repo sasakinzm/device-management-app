@@ -1,0 +1,96 @@
+<html>
+<head>
+<title>BGP Peer List</title>
+</head>
+<body>
+
+<?php
+$keyword_hostname = $_GET['keyword_hostname'];
+$keyword_peer_address = $_GET['keyword_peer_address'];
+$keyword_peer_type = $_GET['keyword_peer_type'];
+$keyword_state = $_GET['keyword_state'];
+$keyword_asn = $_GET['keyword_asn'];
+$keyword_peer_description = $_GET['keyword_peer_description'];
+$match_condition = $_GET['match_condition'];
+
+print("<h1> BGP Peer List </h1>");
+print("検索キーワード: $keyword_hostname $keyword_peer_address $keyword_peer_type $keyword_state $keyword_asn $keyword_peer_description");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> ピアアドレス </td>");
+print("<td> タイプ </td>");
+print("<td> ピア状態 </td>");
+print("<td> AS番号 </td>");
+print("<td> 受信経路数 </td>");
+print("<td> 広報経路数 </td>");
+print("<td> Description </td>");
+print("</tr>");
+
+$link = mysql_connect('localhost', 'root', 'password');
+if (!$link) {
+    die('接続失敗です。'.mysql_error());
+}
+
+$db_selected = mysql_select_db('device_management', $link);
+if (!$db_selected){
+    die('データベース選択失敗です。'.mysql_error());
+}
+
+mysql_set_charset('utf8');
+
+$result = mysql_query("SELECT * FROM bgppeer_list ORDER BY hostname");
+
+
+
+if ($match_condition == "exact") {
+    $result = mysql_query("SELECT
+                               *
+                           FROM
+                               bgppeer_list
+                           WHERE
+                               hostname = '{$keyword_hostname}'
+                           ORDER BY hostname
+                         ");
+} else {
+    $result = mysql_query("SELECT
+                               *
+                           FROM
+                               bgppeer_list
+                           WHERE
+                               hostname LIKE '%{$keyword_hostname}%'
+                           AND peer_address LIKE '%{$keyword_peer_address}%'
+                           AND peer_type LIKE '%{$keyword_peer_type}%'
+                           AND state LIKE '%{$keyword_state}%'
+                           AND asn LIKE '%{$keyword_asn}%'
+                           AND peer_description LIKE '%{$keyword_peer_description}%'
+                           ORDER BY hostname
+                         ");
+}
+
+if (!$result) {
+    die('クエリーが失敗しました。'.mysql_error());
+}
+
+while ($row = mysql_fetch_assoc($result)) {
+    print("<tr>");
+    print("<td>".$row['hostname']."</td>");
+    print("<td>".$row['peer_address']."</td>");
+    print("<td>".$row['peer_type']."</td>");
+    print("<td>".$row['state']."</td>");
+    print("<td>".$row['asn']."</td>");
+    print("<td>".$row['received_route_num']."</td>");
+    print("<td>".$row['advertise_route_num']."</td>");
+    print("<td>".$row['peer_description']."</td>");
+    print("</tr>");
+}
+
+print("</table>");
+
+$close_flag = mysql_close($link);
+
+?>
+
+</body>
+</html>

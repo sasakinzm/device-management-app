@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>Search Form for node master list</title>
+</head>
+<body>
+
+<h1> 検索フォーム </h1><hr>
+
+<form action = "node_master_list.html" method = "get" target = "contents">
+
+<table border=1 width='100%'>
+<tr>
+<td> ホスト名 </td>
+<td> <input type = "text" name = "keyword_host"> </td>
+</tr>
+<tr>
+<td> 拠点名 </td>
+<td> <input type = "text" name = "keyword_location"> </td>
+</tr>
+<tr>
+<td> タイプ </td>
+<td> <input type = "text" name = "keyword_type"> </td>
+</tr>
+<tr>
+<td> 管理IP </td>
+<td> <input type = "text" name = "keyword_mgmt_ip"> </td>
+</tr>
+</table>
+
+キーワードは部分一致検索 <br/>
+複数条件入力時はAND検索 <br/>
+
+<input type = "submit" value = "検索">
+</form>
+
+<br/>
+
+<h1> デバイス追加 </h1><hr>
+
+<form action = "node_master_list.html" method = "get" target = "contents">
+
+<table border=1 width='100%'>
+<tr>
+<td> ホスト名 </td>
+<td> <input type = "text" name = "keyword_host_add"> </td>
+</tr>
+<tr>
+<td> 拠点名 </td>
+<td> <input type = "text" name = "keyword_location_add"> </td>
+</tr>
+<tr>
+<td> タイプ </td>
+<td> <input type = "text" name = "keyword_type_add"> </td>
+</tr>
+<tr>
+<td> 管理IP </td>
+<td> <input type = "text" name = "keyword_mgmt_ip_add"> </td>
+</tr>
+</table>
+
+<input type = "submit" value = "追加">
+</form>
+
+<br/>
+
+<h1> デバイス削除 </h1><hr>
+
+<form action = "node_master_list.html" method = "get" target = "contents">
+
+<table border=1 width='100%'>
+<tr>
+<td> ホスト名 </td>
+<td> <input type = "text" name = "keyword_host_del"> </td>
+</tr>
+<tr>
+<td> 拠点名 </td>
+<td> <input type = "text" name = "keyword_location_del"> </td>
+</tr>
+<tr>
+<td> タイプ </td>
+<td> <input type = "text" name = "keyword_type_del"> </td>
+</tr>
+<tr>
+<td> 管理IP </td>
+<td> <input type = "text" name = "keyword_mgmt_ip_del"> </td>
+</tr>
+</table>
+
+<input type = "submit" value = "削除">
+</form>
+
+
+</body>
+</html>

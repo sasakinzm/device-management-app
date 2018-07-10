@@ -1,0 +1,69 @@
+<html>
+<head>
+<title> Device Master </title>
+</head>
+<body>
+
+<?php
+$keyword_host = $_GET['keyword_host'];
+$keyword_location = $_GET['keyword_location'];
+$keyword_type = $_GET['keyword_type'];
+$keyword_mgmt_ip = $_GET['keyword_mgmt_ip'];
+
+print("<h1> Device Master </h1>");
+print("検索キーワード: $keyword_host $keyword_location $keyword_type $keyword_mgmt_ip");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> 拠点 </td>");
+print("<td> タイプ </td>");
+print("<td> 管理IPアドレス </td>");
+print("</tr>");
+
+$link = mysql_connect('localhost', 'root', 'password');
+if (!$link) {
+    die('接続失敗です。'.mysql_error());
+}
+
+$db_selected = mysql_select_db('device_management', $link);
+if (!$db_selected){
+    die('データベース選択失敗です。'.mysql_error());
+}
+
+mysql_set_charset('utf8');
+
+$result = mysql_query("SELECT * FROM node_list");
+
+$result = mysql_query("SELECT
+                           *
+                       FROM
+                           node_list
+                       WHERE
+                           name LIKE '%{$keyword_host}%'
+                       AND location LIKE '%{$keyword_location}%'
+                       AND type LIKE '%{$keyword_type}%'
+                       AND mgmt_ip LIKE '%{$keyword_mgmt_ip}%'
+                     ");
+
+if (!$result) {
+    die('クエリーが失敗しました。'.mysql_error());
+}
+
+while ($row = mysql_fetch_assoc($result)) {
+    print("<tr>");
+    print("<td>".$row['name']."</td>");
+    print("<td>".$row['location']."</td>");
+    print("<td>".$row['type']."</td>");
+    print("<td>".$row['mgmt_ip']."</td>");
+    print("</tr>");
+}
+
+print("</table>");
+
+$close_flag = mysql_close($link);
+
+?>
+
+</body>
+</html>

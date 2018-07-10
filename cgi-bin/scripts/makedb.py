@@ -156,7 +156,7 @@ for dict in node_list:
                          ) VALUES (
                            "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}"
                          )
-                         ''' % (host, ifname, admin_state, link_state, speed, lag_group, lag_member, description)
+                         '''.format(host, ifname, admin_state, link_state, speed, lag_group, lag_member, description)
 
             cur.execute(sql_insert)
             conn.commit()

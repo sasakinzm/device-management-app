@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>Search Form for interface list</title>
+</head>
+<body>
+
+<h1> 検索フォーム </h1><hr>
+
+<form action = "interface_list.html" method = "get" target = "contents">
+
+<table border=1 width='100%'>
+<tr>
+<td> ホスト名 </td>
+<td> <input type = "text" name = "keyword_host"> </td>
+</tr>
+<tr>
+<td> モデル名 </td>
+<td> <input type = "text" name = "keyword_model"> </td>
+</tr>
+<tr>
+<td> タイプ </td>
+<td> <input type = "text" name = "keyword_type"> </td>
+</tr>
+</table>
+
+キーワードは部分一致検索 <br/>
+複数条件入力時はAND検索 <br/>
+
+<input type = "submit" value = "send">
+</form>
+
+</body>
+</html>

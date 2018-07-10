@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
-from interfaceinfo import interfaceinfo
+from subsysteminfo import *
 
-class session_create_cloudengine(interfaceinfo):
+class session_create_cloudengine(interfaceinfo, bgpinfo):
     """
     ostype が cloudengine の時にデバイス情報を取得するクラス
     """
@@ -106,11 +106,11 @@ class session_create_cloudengine(interfaceinfo):
             ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
             for j in output1_list:
                 if "{0} current state :".format(interface_dict["name"]) in j:
-                    if "Administratively DOWN" in j: admin_state = "DOWN"
-                    else: admin_state = "UP"
+                    if "Administratively DOWN" in j: admin_state = "down"
+                    else: admin_state = "up"
                     interface_dict["admin_state"] = admin_state
                 if "Line protocol current state :" in j:
-                    link_state = j.split(":")[1].strip()
+                    link_state = j.split(":")[1].replace("(spoofing)", "").strip().lower()
                     interface_dict["link_state"] = link_state
                 if "Current BW :" in j:
                     for k in j.split(","):
@@ -148,6 +148,54 @@ class session_create_cloudengine(interfaceinfo):
             interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"]))
 
         return interfaces
+
+
+    def get_bgppeer(self):
+        bgppeers = []
+        stdout = self.run("display bgp peer")
+        stdout_list = stdout.split("\n")[7:]
+        peer_list = [ i.split()[0].strip() for i in stdout_list ]
+
+        for peer in peer_list:
+            bgppeer_dict = {}
+            output1 = self.run("display bgp peer {0} verbose".format(peer))
+            output1_list = output1.split("\n")
+            for line in output1_list:
+                if "BGP Peer is" in line:
+                    peer_addr = line.split(",")[0].replace("BGP Peer is", "").replace("\r", "").strip()
+                    bgppeer_dict["addr"] = peer_addr
+                if "Type" in line:
+                    peer_type = line.split(":")[1].replace("link", "").replace("\r", "").strip()
+                    bgppeer_dict["peer_type"] = peer_type
+                if "BGP current state:" in line:
+                    state = line.split(",")[0].replace("BGP current state:", "").replace("\r", "").strip()
+                    bgppeer_dict["state"] = state
+                if "remote AS" in line:
+                    asn = line.split(",")[1].replace("remote AS", "").replace("\r", "").strip()
+                    bgppeer_dict["asn"] = asn
+                if "Peer's description:" in line:
+                    peer_description = line.split(":")[1].replace("Peer's description:", "").replace("\r", "").replace('"', "").strip()
+                    bgppeer_dict["peer_description"] = peer_description
+            output2 = self.run("display bgp routing-table peer {0} received-routes statistics".format(peer))
+            output2_list = output2.split("\n")
+            for line in output2_list:
+                if "Received routes total:" in line:
+                    bgppeer_dict["rcvroutes"] = line.split(":")[1].strip()
+            output3 = self.run("display bgp routing-table peer {0} advertised-routes statistics".format(peer))
+            output3_list = output3.split("\n")
+            for line in output3_list:
+                if "Advertised routes total:" in line:
+                    bgppeer_dict["advroutes"] = line.split(":")[1].strip()
+
+            ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
+            keys = ["addr", "asn", "peer_type", "state", "rcvroutes", "advroutes", "peer_description"]
+            key_diff = list(set(keys) - set(bgppeer_dict.keys()))
+            for key in key_diff:
+                bgppeer_dict[key] = "-"
+
+            bgppeers.append(bgpinfo(bgppeer_dict["addr"], bgppeer_dict["peer_type"], bgppeer_dict["state"], bgppeer_dict["asn"], bgppeer_dict["rcvroutes"], bgppeer_dict["advroutes"], bgppeer_dict["peer_description"]))
+
+        return bgppeers
 
 
     def close(self):

@@ -39,5 +39,8 @@ class session_create:
     def get_interface(self):
         return self.sess.get_interface()
 
+    def get_bgppeer(self):
+        return self.sess.get_bgppeer()
+
     def close(self):
         return self.sess.close()

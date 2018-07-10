@@ -1,12 +1,12 @@
 [database]
-username: root
-password: password
-database: device_management
-host: localhost
+username: 
+password: 
+database: 
+host: 
 
 [device]
-username: sasaki
-password: 55yakiniku!!
+username: 
+password:
 
 [env]
-domain: net.so-net.ne.jp
+domain: 

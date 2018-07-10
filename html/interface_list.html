@@ -1,1 +1,97 @@
-aaa
+<html>
+<head>
+<title>Interface List</title>
+</head>
+<body>
+
+<?php
+$keyword_hostname = $_GET['keyword_hostname'];
+$keyword_interface_name = $_GET['keyword_interface_name'];
+$keyword_admin_state = $_GET['keyword_admin_state'];
+$keyword_link_state = $_GET['keyword_link_state'];
+$keyword_bandwidth = $_GET['keyword_bandwidth'];
+$keyword_lag_group = $_GET['keyword_lag_group'];
+$keyword_lag_member = $_GET['keyword_lag_member'];
+$keyword_description = $_GET['keyword_description'];
+$match_condition = $_GET['match_condition'];
+
+print("<h1> Interface List </h1>");
+print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> インターフェース </td>");
+print("<td> Adminステート </td>");
+print("<td> リンク状態 </td>");
+print("<td> 帯域幅 </td>");
+print("<td> LAGグループ </td>");
+print("<td> Description </td>");
+print("</tr>");
+
+$link = mysql_connect('localhost', 'root', 'password');
+if (!$link) {
+    die('接続失敗です。'.mysql_error());
+}
+
+$db_selected = mysql_select_db('device_management', $link);
+if (!$db_selected){
+    die('データベース選択失敗です。'.mysql_error());
+}
+
+mysql_set_charset('utf8');
+
+$result = mysql_query("SELECT * FROM interface_list ORDER BY name");
+
+
+
+if ($match_condition == "exact") {
+    $result = mysql_query("SELECT
+                               *
+                           FROM
+                               interface_list
+                           WHERE
+                               hostname = '{$keyword_hostname}'
+                           ORDER BY hostname
+                         ");
+} else {
+    $result = mysql_query("SELECT
+                               *
+                           FROM
+                               interface_list
+                           WHERE
+                               hostname LIKE '%{$keyword_hostname}%'
+                           AND interface_name LIKE '%{$keyword_interface_name}%'
+                           AND admin_state LIKE '%{$keyword_admin_state}%'
+                           AND link_state LIKE '%{$keyword_link_state}%'
+                           AND bandwidth LIKE '%{$keyword_bandwidth}%'
+                           AND lag_group LIKE '%{$keyword_lag_group}%'
+                           AND description LIKE '%{$keyword_description}%'
+                           ORDER BY hostname
+                         ");
+}
+
+if (!$result) {
+    die('クエリーが失敗しました。'.mysql_error());
+}
+
+while ($row = mysql_fetch_assoc($result)) {
+    print("<tr>");
+    print("<td>".$row['hostname']."</td>");
+    print("<td>".$row['interface_name']."</td>");
+    print("<td>".$row['admin_state']."</td>");
+    print("<td>".$row['link_state']."</td>");
+    print("<td>".$row['bandwidth']."</td>");
+    print("<td>".$row['lag_group']."</td>");
+    print("<td>".$row['description']."</td>");
+    print("</tr>");
+}
+
+print("</table>");
+
+$close_flag = mysql_close($link);
+
+?>
+
+</body>
+</html>

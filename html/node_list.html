@@ -1,20 +1,26 @@
 <html>
 <head>
-<title>PHP TEST</title>
+<title> Device List </title>
 </head>
 <body>
 
 <?php
 $keyword_host = $_GET['keyword_host'];
-$keyword_model = $_GET['keyword_mode'];
+$keyword_location = $_GET['keyword_location'];
+$keyword_model = $_GET['keyword_model'];
 $keyword_type = $_GET['keyword_type'];
 $keyword_os_version = $_GET['keyword_os_version'];
 $keyword_mgmt_ip = $_GET['keyword_mgmt_ip'];
-print("検索キーワード: $keyword_host $keyword_model $keyword_type $keyword_os_version $keyword_mgmt_ip");
+$match_condition = $_GET['match_condition'];
 
-print("<table border=1 width='100%'>");
+print("<h1> Device List </h1>");
+
+print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_type $keyword_os_version $keyword_mgmt_ip");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
 print("<tr>");
 print("<td> ホスト名 </td>");
+print("<td> 拠点 </td>");
 print("<td> モデル名 </td>");
 print("<td> タイプ </td>");
 print("<td> 筐体シリアルナンバー </td>");
@@ -34,19 +40,19 @@ if (!$db_selected){
 
 mysql_set_charset('utf8');
 
-$result = mysql_query("SELECT * FROM node_list");
-
 $result = mysql_query("SELECT
                            *
                        FROM
                            node_list
                        WHERE
                            name LIKE '%{$keyword_host}%'
+                       AND location LIKE '%{$keyword_location}%'
                        AND model LIKE '%{$keyword_model}%'
                        AND type LIKE '%{$keyword_type}%'
                        AND version LIKE '%{$keyword_os_version}%'
                        AND mgmt_ip LIKE '%{$keyword_mgmt_ip}%'
-                     ");
+                       ORDER BY name
+                      ");
 
 if (!$result) {
     die('クエリーが失敗しました。'.mysql_error());
@@ -55,11 +61,14 @@ if (!$result) {
 while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
     print("<td>".$row['name']."</td>");
+    print("<td>".$row['location']."</td>");
     print("<td>".$row['model']."</td>");
     print("<td>".$row['type']."</td>");
     print("<td>".$row['serial']."</td>");
     print("<td>".$row['version']."</td>");
     print("<td>".$row['mgmt_ip']."</td>");
+    print("<td> <a href='interface_list.html?keyword_hostname=".$row['name']."&match_condition=exact' targt='contents'>IF一覧</a></td>");
+    print("<td> <a href='bgppeer_list.html?keyword_hostname=".$row['name']."&match_condition=exact' targt='contents'>BGPピア一覧</a></td>");
     print("</tr>");
 }
 

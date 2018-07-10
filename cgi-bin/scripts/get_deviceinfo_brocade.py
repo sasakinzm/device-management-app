@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
-from interfaceinfo import interfaceinfo
+from subsysteminfo import *
 
 class session_create_brocade(interfaceinfo):
     """

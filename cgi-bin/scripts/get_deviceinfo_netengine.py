@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
-from interfaceinfo import interfaceinfo
+from subsysteminfo import *
 
 class session_create_netengine(interfaceinfo):
     """
@@ -82,7 +82,6 @@ class session_create_netengine(interfaceinfo):
         for i in ifname_list:
             if "Line protocol" in i : ifname_list.remove(i)
         ifname_list = [l.split()[0] for l in ifname_list]     ### インターフェース名を格納した配列に整形
-        print(ifname_list)
 
         ### 物理インターフェースに対するEth-Trunk グループを決定するために、
         ### 物理インターフェースを key, EthTrunk グループをvalue とするディクショナリ(lag_group_dict)を作る(後で使う)
@@ -92,7 +91,6 @@ class session_create_netengine(interfaceinfo):
                 output = self.run("display interface {0}".format(i))
                 output_list = output.split("\n")
                 line_indexs = [i for i,x in enumerate(output_list) if x =='-----------------------------------------------------\r']
-                print(line_indexs)
                 member_row_list = output_list[min(line_indexs)+3:max(line_indexs)]
                 lag_member = [i.split()[0] for i in member_row_list]
                 for j in lag_member:
@@ -111,19 +109,19 @@ class session_create_netengine(interfaceinfo):
             ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
             for j in output1_list:
                 if "{0} current state :".format(interface_dict["name"]) in j:
-                    if "Administratively DOWN" in j: admin_state = "DOWN"
-                    else: admin_state = "UP"
+                    link_state = j.split(":")[1].strip().lower()
                     interface_dict["admin_state"] = admin_state
                 if "Line protocol current state :" in j:
-                    link_state = j.split(":")[1].strip()
+                    link_state = j.split(":")[1].replace("(spoofing)", "").strip().lower()
                     interface_dict["link_state"] = link_state
                 if "Current BW :" in j:
                     for k in j.split(","):
                         if "Current BW :" in k: speed = k.replace("Current BW : ", "").strip()
+                    interface_dict["speed"] = speed
                 if "Port BW:" in j:
                     for k in j.split(","):
                         if "Port BW:" in k: speed = k.replace("Port BW:", "").strip()
-                interface_dict["speed"] = speed
+                    interface_dict["speed"] = speed
                 if "Description:" in j:
                     description = j.replace("Description:", "")
                     interface_dict["description"] = description.replace("\r", "")

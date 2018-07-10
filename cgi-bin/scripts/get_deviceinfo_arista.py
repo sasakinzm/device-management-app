@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
-from interfaceinfo import interfaceinfo
+from subsysteminfo import *
 
 class session_create_arista(interfaceinfo):
     """
@@ -75,7 +75,10 @@ class session_create_arista(interfaceinfo):
 
         for i in stdout_list:
             interface_dict = {}
-            interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"] = i[0], i[1], i[2]
+            interface_dict["name"] = i[0]
+            interface_dict["admin_state"] = i[1].replace(",", "")
+            interface_dict["link_state"] = i[2]
+            if i[2] == "notpresent": interface_dict["link_state"] = "down"
 
             output1 = self.run("show interfaces {0}".format(interface_dict["name"]))
             output1_list = output1.split("\n")

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
-from interfaceinfo import interfaceinfo
+from subsysteminfo import *
 
 class session_create_junos(interfaceinfo):
     """
@@ -89,7 +89,10 @@ class session_create_junos(interfaceinfo):
 
         for i in stdout_list:
             interface_dict = {}
-            interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"] = i[0], i[1], i[2]
+            interface_dict["name"] = i[0]
+            if "Enabled" in i[1]: interface_dict["admin_state"] = "up"
+            else: interface_dict["admin_state"] = i[1].lower()
+            interface_dict["link_state"] = i[2].lower()
 
             output1 = self.run("show interfaces {0}".format(i[0]))
             output1_list = output1.split("\n")

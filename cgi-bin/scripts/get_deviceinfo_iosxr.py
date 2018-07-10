@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
-from interfaceinfo import interfaceinfo
+from subsysteminfo import *
 
 class session_create_iosxr(interfaceinfo):
     """
@@ -91,7 +91,7 @@ class session_create_iosxr(interfaceinfo):
                     if "No. of members in this bundle:" in j:
                         member_num = int(j.replace("No. of members in this bundle: ", ""))
                         index = output_list.index(j)
-                lag_member = [ k.split()[0] for k in output_list[index + 1:index + member_num + 1]]
+                        lag_member = [ k.split()[0] for k in output_list[index + 1:index + member_num + 1]]
                 for j in lag_member:
                     lag_group_dict[j] = i
 
@@ -111,7 +111,7 @@ class session_create_iosxr(interfaceinfo):
                         admin_state = "down"
                     else: admin_state = "up"
                     interface_dict["admin_state"] = admin_state
-                    link_state = j.split(",")[1].replace("line protocol is ", "").strip()
+                    link_state = j.split(",")[1].replace("line protocol is ", "").replace("administratively", "").strip()
                     interface_dict["link_state"] = link_state
                 if "BW " in j:
                     for k in j.split(","):

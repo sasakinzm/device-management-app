@@ -81,9 +81,10 @@ class session_create_brocade(interfaceinfo):
         インターフェース名、Adminステート、リンク状態、帯域幅、ディスクリプション、
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
-        ifname = self.run('show interface | include "line protocol"')
-        ifname_list = ifname.split("\r\n")
-        ifname_list = [i.split()[0] + " " +  i.split()[1] for i in ifname_list]
+
+        ifinfo = self.run("show interface")
+        ifinfo_list = ifinfo.split("\r\n\r\n")
+        ifname_list = [i.split()[0] + " " +  i.split()[1] for i in ifinfo_list]
         interfaces = []
 
         ### 物理インターフェースに対するPort-channel グループを決定するために、
@@ -98,32 +99,28 @@ class session_create_brocade(interfaceinfo):
 
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
-        for i in ifname_list:
+        for interface in ifinfo_list:
+            if interface.split()[0].startswith("Vlan") or interface.split()[0].startswith("loopback"):
+                continue
+
             interface_dict = {}
-            interface_dict["name"] = i
-
-            output1 = self.run("show interface {0}".format(interface_dict["name"]))
-            output1_list = output1.split("\n")
-
-            ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
-            for j in output1_list:
-                if "line protocol " in j:
-                    if "admin down" in j:
-                        admin_state = "down"
-                    else: admin_state = "up"
-                    interface_dict["admin_state"] = admin_state
-                    if "line protocol is up" in j: 
-                        link_state = "up"
-                    elif "line protocol is down" in j:
-                        link_state = "down"
-                    interface_dict["link_state"] = link_state
-                if "LineSpeed Actual" in j:
-                    interface_dict["speed"] = j.split(":")[1].replace("\r", "").strip()
-                if "Description:" in j:
-                    interface_dict["description"] = j.split(":")[1].replace("\r", "").strip()
+            interface_dict["name"] = interface.split()[0] + " " +  interface.split()[1]
+            for row in interface.split("\n"):
+                if "line protocol" in row:
+                    if "admin down" in row:
+                        interface_dict["admin_state"] = "down"
+                    else: interface_dict["admin_state"] = "up"
+                    if "line protocol is up" in row:
+                        interface_dict["link_state"] = "up"
+                    elif "line protocol is down" in row:
+                        interface_dict["link_state"] = "down"
+                if "LineSpeed Actual" in row:
+                    interface_dict["speed"] = row.split(":")[1].replace("\r", "").strip()
+                if "Description:" in row:
+                    interface_dict["description"] = row.split(":")[1].replace("\r", "").strip()
 
             ### lag_group_dict から物理インターフェースが所属するPort-channelポートを取得する
-            short_ifname = i.replace("Port-channel", "Po").replace("FortyGigabitEthernet","Fo").replace("TenGigabitEthernet", "Te")
+            short_ifname = interface_dict["name"].replace("Port-channel", "Po").replace("FortyGigabitEthernet","Fo").replace("TenGigabitEthernet", "Te")
             if short_ifname in lag_group_dict.keys():
                 interface_dict["lag_group"] = lag_group_dict[short_ifname]
 
@@ -134,6 +131,7 @@ class session_create_brocade(interfaceinfo):
                     if lag_group_dict[j] == short_ifname:
                         lag_member.append(j)
                 interface_dict["lag_member"] = lag_member
+
 
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
             keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member"]

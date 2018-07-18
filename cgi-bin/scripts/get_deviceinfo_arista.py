@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
+import re
 from subsysteminfo import *
 
 class session_create_arista(interfaceinfo):
@@ -64,50 +65,47 @@ class session_create_arista(interfaceinfo):
         インターフェース名、Adminステート、リンク状態、帯域幅、ディスクリプション、
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
-        stdout = self.run("show interface | include line protocol")
-        stdout_list = stdout.split("\n")
-        stdout_list = [i.replace("is", "").replace("line protocol", "").replace("administratively ", "").replace("admintratively", "") for i in stdout_list]
-        stdout_list = [i.split() for i in stdout_list]
+
+        ifinfo = self.run("show interface")
+        ifinfo_list = re.split('\r\n(?=\S)', ifinfo)        
         interfaces = []
 
-        ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
-        ### それらを interfaces 配列に格納していく
+        ### 各インターフェースに対して、Adminステート、リンク状態、帯域幅、ディスクリプション、LAGグループ、LAGメンバーを取得する
+        for interface in ifinfo_list:
 
-        for i in stdout_list:
+            if interface.split()[0].startswith("Vlan") or interface.split()[0].startswith("loopback"):
+                continue
+
             interface_dict = {}
-            interface_dict["name"] = i[0]
-            interface_dict["admin_state"] = i[1].replace(",", "")
-            interface_dict["link_state"] = i[2]
-            if i[2] == "notpresent": interface_dict["link_state"] = "down"
-
-            output1 = self.run("show interfaces {0}".format(interface_dict["name"]))
-            output1_list = output1.split("\n")
-
-            ### 各インターフェースに対して、帯域幅とディスクリプションとLAGグループを取得する
-            for j in output1_list:
-                if "BW " in j:
-                    for k in j.split(","):
-                        if "BW" in k: speed = k.strip().replace("BW ", "")
-                    interface_dict["speed"] = speed
-                if "Description: " in j:
-                    description = j.replace("Description: ", "")
-                    interface_dict["description"] = description
-                if "Member of Port-Channel" in j:
-                    for k in j.split():
-                        if "Port-Channel" in k: lag_group = k.strip()
-                    interface_dict["lag_group"] = lag_group
-
-            ### Po インターフェースに対して、所属するメンバーポートを並べた配列を作る
-            if "Port-Channel" in i[0]:
-                output2 = self.run("show interfaces {0}".format(i[0]))
-                output2_list = output2.split("\n")
+            interface_dict["name"] = interface.split()[0]
+            for row in interface.split("\n"):
+                if "line protocol is" in row:
+                    temp_list = row.split(",")
+                    interface_dict["admin_state"] = temp_list[0].split()[2]
+                    if interface_dict["admin_state"] == "administratively":
+                        interface_dict["admin_state"] = "down"
+                    interface_dict["link_state"] = temp_list[1].split()[3]
+                    if interface_dict["link_state"] == "notpresent":
+                        interface_dict["link_state"] = "down"
+                if "BW" in row:
+                    for i in row.split(","):
+                        if "BW" in i:
+                            interface_dict["speed"] = i.replace("BW ", "").strip()
+                if "Description: " in row:
+                    interface_dict["description"] = row.replace("Description: ", "").strip()
+                if "Member of Port-Channel" in row:
+                    for i in row.split():
+                        if "Port-Channel" in i:
+                            interface_dict["lag_group"] = i.strip()
+            if "Port-Channel" in interface_dict["name"]:
                 lag_member = []
-                for j in output2_list:
-                    if " ... " in j:
-                        for k in j.split():
-                            if "Ethernet" in k: member = k.strip()
+                for row in interface.split("\n"):
+                    if " ... " in row:
+                        for i in row.split():
+                            if "Ethernet" in i: member = i.strip()
                         lag_member.append(member)
                 interface_dict["lag_member"] = lag_member
+
 
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
             keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member"]

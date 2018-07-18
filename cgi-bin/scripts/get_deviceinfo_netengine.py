@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
+import re
 from subsysteminfo import *
 
 class session_create_netengine(interfaceinfo):
@@ -38,7 +39,7 @@ class session_create_netengine(interfaceinfo):
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n<{0}>".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
-        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\n<{0}>".format(self.host), "")
+        stdout = stdout.replace("{0}\r\n".format(command), "").replace("\r\n<{0}>".format(self.host), "")
         return stdout
 
 
@@ -77,58 +78,57 @@ class session_create_netengine(interfaceinfo):
         インターフェース名、Adminステート、リンク状態、帯域幅、ディスクリプション、
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
-        ifname = self.run("display interface | include current state")
-        ifname_list = ifname.split("\n")
-        for i in ifname_list:
-            if "Line protocol" in i : ifname_list.remove(i)
-        ifname_list = [l.split()[0] for l in ifname_list]     ### インターフェース名を格納した配列に整形
+        ifinfo = self.run("display interface")
+        ifinfo_list = re.split('\r\n\r\n(?=\S)', ifinfo)
 
         ### 物理インターフェースに対するEth-Trunk グループを決定するために、
         ### 物理インターフェースを key, EthTrunk グループをvalue とするディクショナリ(lag_group_dict)を作る(後で使う)
         lag_group_dict = {}
-        for i in ifname_list:
-            if "Eth-Trunk" in i:
-                output = self.run("display interface {0}".format(i))
-                output_list = output.split("\n")
-                line_indexs = [i for i,x in enumerate(output_list) if x =='-----------------------------------------------------\r']
-                member_row_list = output_list[min(line_indexs)+3:max(line_indexs)]
+        for interface in ifinfo_list:
+            ifname = interface.split()[0]
+            if "Eth-Trunk" in ifname:
+                temp_list = interface.split("\n")
+                line_indexs = [i for i,x in enumerate(temp_list) if x =='-----------------------------------------------------\r']
+                member_row_list = temp_list[min(line_indexs)+3:max(line_indexs)]
                 lag_member = [i.split()[0] for i in member_row_list]
                 for j in lag_member:
-                    lag_group_dict[j] = i
+                    lag_group_dict[j] = ifname
 
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
         interfaces = []
-        for i in ifname_list:
-            interface_dict = {}
-            interface_dict["name"] = i
+        for interface in ifinfo_list:
+            ifname = interface.split()[0]
+            if ifname.startswith("Aux"):
+                continue            
+            if ifname.startswith("NULL"):
+                continue            
+            if ifname.startswith("Virtual-Template0"):
+                continue            
 
-            output1 = self.run("display interface {0}".format(interface_dict["name"]))
-            output1_list = output1.split("\n")
+            interface_dict = {}
+            interface_dict["name"] = ifname
 
             ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
-            for j in output1_list:
-                if "{0} current state :".format(interface_dict["name"]) in j:
-                    link_state = j.split(":")[1].strip().lower()
-                    interface_dict["admin_state"] = admin_state
-                if "Line protocol current state :" in j:
-                    link_state = j.split(":")[1].replace("(spoofing)", "").strip().lower()
-                    interface_dict["link_state"] = link_state
-                if "Current BW :" in j:
-                    for k in j.split(","):
-                        if "Current BW :" in k: speed = k.replace("Current BW : ", "").strip()
-                    interface_dict["speed"] = speed
-                if "Port BW:" in j:
-                    for k in j.split(","):
-                        if "Port BW:" in k: speed = k.replace("Port BW:", "").strip()
-                    interface_dict["speed"] = speed
-                if "Description:" in j:
-                    description = j.replace("Description:", "")
-                    interface_dict["description"] = description.replace("\r", "")
+            for row in interface.split("\n"):
+                if "{0} current state :".format(interface_dict["name"]) in row:
+                    interface_dict["admin_state"] = row.split(":")[1].strip().lower()
+                if "Line protocol current state :" in row:
+                    interface_dict["link_state"] = row.split(":")[1].replace("(spoofing)", "").strip().lower()
+                if "Current BW:" in row:
+                    for i in row.split(","):
+                        if "Current BW:" in i:
+                            interface_dict["speed"] = i.replace("Current BW: ", "").strip()
+                if "Port BW:" in row:
+                    for i in row.split(","):
+                        if "Port BW:" in i:
+                            interface_dict["speed"] = i.replace("Port BW:", "").strip()
+                if "Description:" in row:
+                    interface_dict["description"] = row.replace("Description:", "").replace("\r", "")
 
             ### lag_group_dict から物理インターフェースが所属するEthTrunkポートを取得する
-            if i in lag_group_dict.keys():
-                interface_dict["lag_group"] = lag_group_dict[i]
+            if interface_dict["name"] in lag_group_dict.keys():
+                interface_dict["lag_group"] = lag_group_dict[interface_dict["name"]]
 
             ### Eth-Trunk インターフェースに対して、所属するメンバーポートを並べた配列を作る
             if "Eth-Trunk" in interface_dict["name"]:

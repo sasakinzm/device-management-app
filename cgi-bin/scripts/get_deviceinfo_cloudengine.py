@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
+import re
 from subsysteminfo import *
 
 class session_create_cloudengine(interfaceinfo, bgpinfo):
@@ -77,8 +78,10 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
         インターフェース名、Adminステート、リンク状態、帯域幅、ディスクリプション、
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
-        ifname = self.run("display interface | include current state : | exclude Line protocol")
-        ifname_list = [l.split()[0] for l in ifname.split("\n")[1:]]     ### インターフェース名を格納した配列に整形
+        ifinfo = self.run("display interface")
+        ifinfo = ifinfo.replace(re.search(".*\n", ifinfo).group(0), "")
+        ifinfo_list = re.split('\r\n\r\n(?=\S)', ifinfo)
+        ifname_list = [i.split()[0] for i in ifinfo_list]
 
         ### 物理インターフェースに対するEth-Trunk グループを決定するために、
         ### 物理インターフェースを key, EthTrunk グループをvalue とするディクショナリ(lag_group_dict)を作る(後で使う)
@@ -96,33 +99,30 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
         interfaces = []
-        for i in ifname_list:
+        for interface in ifinfo_list:
+            if interface.split()[0].startswith("Vlan") or interface.split()[0].startswith("Loopback"):
+                continue
+
             interface_dict = {}
-            interface_dict["name"] = i
-
-            output1 = self.run("display interface {0}".format(interface_dict["name"]))
-            output1_list = output1.split("\n")
-
-            ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
-            for j in output1_list:
-                if "{0} current state :".format(interface_dict["name"]) in j:
-                    if "Administratively DOWN" in j: admin_state = "down"
-                    else: admin_state = "up"
-                    interface_dict["admin_state"] = admin_state
-                if "Line protocol current state :" in j:
-                    link_state = j.split(":")[1].replace("(spoofing)", "").strip().lower()
-                    interface_dict["link_state"] = link_state
-                if "Current BW :" in j:
-                    for k in j.split(","):
-                        if "Current BW :" in k: speed = k.replace("Current BW : ", "").strip()
-                    interface_dict["speed"] = speed
-                if "Description: " in j:
-                    description = j.replace("Description: ", "")
-                    interface_dict["description"] = description.replace("\r", "")
+            interface_dict["name"] = interface.split()[0]
+            for row in interface.split("\n"):
+                if "{0} current state :".format(interface_dict["name"]) in row:
+                        if "Administratively DOWN" in row:
+                            interface_dict["admin_state"] = "down"
+                        else:
+                            interface_dict["admin_state"] = "up"
+                if "Line protocol current state :" in row:
+                    interface_dict["link_state"] = row.split(":")[1].replace("(spoofing)", "").strip().lower()
+                if "Current BW :" in row:
+                    for i in row.split(","):
+                        if "Current BW :" in i:
+                            interface_dict["speed"] = i.replace("Current BW : ", "").strip()
+                if "Description: " in row:
+                    interface_dict["description"] = row.replace("Description: ", "").replace("\r", "").strip()
 
             ### lag_group_dict から物理インターフェースが所属するEthTrunkポートを取得する
-            if i in lag_group_dict.keys():
-                interface_dict["lag_group"] = lag_group_dict[i]
+            if interface_dict["name"] in lag_group_dict.keys():
+                interface_dict["lag_group"] = lag_group_dict[interface_dict["name"]]
 
 
             ### 物理インターフェースの帯域幅はインターフェース名から直接決める
@@ -152,18 +152,13 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
 
     def get_bgppeer(self):
         bgppeers = []
-        stdout = self.run("display bgp peer")
-        stdout_list = stdout.split("\n")[7:]
-        peer_list = [ i.split()[0].strip() for i in stdout_list ]
+        peerinfo = self.run("show bgp peer verbose")
+        peerinfo_list = bgppeers.split("\r\n BGP Peer is ")
 
-        for peer in peer_list:
+        for peer in peerinfo_list:
             bgppeer_dict = {}
-            output1 = self.run("display bgp peer {0} verbose".format(peer))
-            output1_list = output1.split("\n")
-            for line in output1_list:
-                if "BGP Peer is" in line:
-                    peer_addr = line.split(",")[0].replace("BGP Peer is", "").replace("\r", "").strip()
-                    bgppeer_dict["addr"] = peer_addr
+            bgppeer_dict["addr"] = peer.split()[0]
+            for line in peer.split("\n"):
                 if "Type" in line:
                     peer_type = line.split(":")[1].replace("link", "").replace("\r", "").strip()
                     bgppeer_dict["peer_type"] = peer_type
@@ -176,16 +171,10 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
                 if "Peer's description:" in line:
                     peer_description = line.split(":")[1].replace("Peer's description:", "").replace("\r", "").replace('"', "").strip()
                     bgppeer_dict["peer_description"] = peer_description
-            output2 = self.run("display bgp routing-table peer {0} received-routes statistics".format(peer))
-            output2_list = output2.split("\n")
-            for line in output2_list:
-                if "Received routes total:" in line:
-                    bgppeer_dict["rcvroutes"] = line.split(":")[1].strip()
-            output3 = self.run("display bgp routing-table peer {0} advertised-routes statistics".format(peer))
-            output3_list = output3.split("\n")
-            for line in output3_list:
-                if "Advertised routes total:" in line:
-                    bgppeer_dict["advroutes"] = line.split(":")[1].strip()
+                if "Received total routes:" in line:
+                    bgppeer_dict["rcvroutes"] = line.replace("Received total routes:", "").strip()
+                if "Advertised total routes:" in line:
+                    bgppeer_dict["advroutes"] = line.replace("Advertised total routes:", "").strip()
 
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
             keys = ["addr", "asn", "peer_type", "state", "rcvroutes", "advroutes", "peer_description"]

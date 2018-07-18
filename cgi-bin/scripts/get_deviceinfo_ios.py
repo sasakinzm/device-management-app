@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
+import re
 from subsysteminfo import *
 
 class session_create_ios(interfaceinfo, bgpinfo):
@@ -38,7 +39,7 @@ class session_create_ios(interfaceinfo, bgpinfo):
         self.conn.write("{0}\n".format(command).encode("utf-8"))
         stdout = self.conn.read_until("\n{0}>".format(self.host).encode("utf-8"))
         stdout = stdout.decode("utf-8")
-        stdout = stdout.replace(" {0}\r\n".format(command), "").replace("\r\n{0}>".format(self.host), "")
+        stdout = stdout.replace("{0}\r\n".format(command), "").replace("\r\n{0}>".format(self.host), "")
         return stdout
 
 
@@ -49,7 +50,7 @@ class session_create_ios(interfaceinfo, bgpinfo):
         """
         ### モデル名を取得
         stdout = self.run("show inventory")
-        stdout = stdout.split("\n")[4]  # コマンドの4行目に "PID: XXXX, VID: V02,SN: XXXXXX" が出力される前提
+        stdout = stdout.split("\n")[3]  # コマンドの4行目に "PID: XXXX, VID: V02,SN: XXXXXX" が出力される前提
         stdout_list = stdout.replace(",", "").split()
         self.model = stdout_list[1]
 
@@ -72,55 +73,51 @@ class session_create_ios(interfaceinfo, bgpinfo):
         インターフェース名、Adminステート、リンク状態、帯域幅、ディスクリプション、
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
-        ifname = self.run("show interface | include line protocol")
-        ifname_list = ifname.split("\n")
-        ifname_list = [i.split()[0] for i in ifname_list]
-        interfaces = []
+        ifinfo = self.run("show interface")
+        ifinfo_list = re.split('\r\n(?=\S)', ifinfo)
 
         ### 物理インターフェースに対するPort-channel グループを決定するために、
         ### 物理インターフェースを key, Port-channel グループをvalue とするディクショナリ(lag_group_dict)を作る(後で使う)
         lag_group_dict = {}
-        for i in ifname_list:
-            if "Port-channel" in i:
-                output = self.run("show interface {0}".format(i))
-                output_list = output.split("\n")
-                for j in output_list:
+        for interface in ifinfo_list:
+            ifname = interface.split()[0]
+            if "Port-channel" in ifname:
+                temp_list = interface.split("\n")
+                for j in temp_list:
                     if "Members in this channel:" in j:
                         lag_member = [k.strip() for k in j.replace("Members in this channel:", "").split()]
                 for j in lag_member:
-                    lag_group_dict[j] = i
+                    lag_group_dict[j] = ifname
 
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
-        for i in ifname_list:
+        interfaces = []
+        for interface in ifinfo_list:
+            if interface.split()[0].startswith("Vlan") or interface.split()[0].startswith("Loopback"):
+                continue
+
             interface_dict = {}
-            interface_dict["name"] = i
-
-            output1 = self.run("show interface {0}".format(interface_dict["name"]))
-            output1_list = output1.split("\n")
-
-            ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
-            for j in output1_list:
-                if "line protocol " in j:
-                    if "administratively down" in j:
-                        admin_state = "down"
-                    else: admin_state = "up"
-                    interface_dict["admin_state"] = admin_state
-                    if "line protocol is up" in j: 
-                        link_state = "up"
-                    elif "line protocol is down" in j:
-                        link_state = "down"
-                    interface_dict["link_state"] = link_state
-                if "BW " in j:
-                    for k in j.split(","):
-                        if "BW" in k: speed = k.strip().replace("BW ", "").strip()
-                    interface_dict["speed"] = speed
-                if "Description:" in j:
-                    description = j.replace("Description:", "")
-                    interface_dict["description"] = description.replace("\r", "")
+            interface_dict["name"] = interface.split()[0]
+            for row in interface.split("\n"):
+                if "line protocol " in row:
+                    if "administratively down" in row:
+                        interface_dict["admin_state"] = "down"
+                    else:
+                        interface_dict["admin_state"] = "up"
+                    if "line protocol is up" in row: 
+                        interface_dict["link_state"] = "up"
+                    elif "line protocol is down" in row:
+                        interface_dict["link_state"] = "down"
+                if "BW " in row:
+                    for i in row.split(","):
+                        if "BW" in i:
+                            interface_dict["speed"] = i.strip().replace("BW ", "").strip()
+                if "Description:" in row:
+                    interface_dict["description"] = row.replace("Description:", "").replace("\r", "")
 
             ### lag_group_dict から物理インターフェースが所属するPort-channelポートを取得する
-            short_ifname = i.replace("Port-channel", "Po").replace("FortyGigabitEthernet","Fo").replace("TenGigabitEthernet", "Te")
+            short_ifname = interface_dict["name"].replace("Port-channel", "Po").replace("FortyGigabitEthernet","Fo").replace("TenGigabitEthernet", "Te").replace("GigabitEthernet", "Gi")
+
             if short_ifname in lag_group_dict.keys():
                 interface_dict["lag_group"] = lag_group_dict[short_ifname]
 

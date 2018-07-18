@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import telnetlib
+import re
 from subsysteminfo import *
 
 class session_create_iosxr(interfaceinfo):
@@ -75,55 +76,52 @@ class session_create_iosxr(interfaceinfo):
         インターフェース名、Adminステート、リンク状態、帯域幅、ディスクリプション、
         LAGに含まれる場合は所属するLAGグループ、LAGポートなら含まれるLAGメンバーを取得する
         """
-        ifname = self.run("show interface | include line protocol")
-        ifname_list = ifname.split("\n")[1:]
-        ifname_list = [i.split()[0] for i in ifname_list]
-        interfaces = []
+        ifinfo = self.run("show interface")
+        ifinfo = ifinfo.replace(re.search(".*\n", ifinfo).group(0), "")
+        ifinfo_list = re.split('\r\n\r\n(?=\S)', ifinfo)
 
         ### 物理インターフェースに対するBundle-Ether グループを決定するために、
         ### 物理インターフェースを key, Bundle-Ether グループをvalue とするディクショナリ(lag_group_dict)を作る(後で使う)
         lag_group_dict = {}
-        for i in ifname_list:
-            if "Bundle-Ether" in i:
-                output = self.run("show interface {0}".format(i))
-                output_list = output.split("\n")
-                for j in output_list:
-                    if "No. of members in this bundle:" in j:
-                        member_num = int(j.replace("No. of members in this bundle: ", ""))
-                        index = output_list.index(j)
-                        lag_member = [ k.split()[0] for k in output_list[index + 1:index + member_num + 1]]
+        for interface in ifinfo_list:
+            if "Bundle-Ether" in interface.split()[0]:
+                temp_list = interface.split("\n")
+                for row in temp_list:
+                    if "No. of members in this bundle:" in row:
+                        member_num = int(row.replace("No. of members in this bundle: ", ""))
+                        index = temp_list.index(row)
+                        lag_member = [ k.split()[0] for k in temp_list[index + 1:index + member_num + 1]]
                 for j in lag_member:
-                    lag_group_dict[j] = i
+                    lag_group_dict[j] = interface.split()[0]
 
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
-        for i in ifname_list:
-            interface_dict = {}
-            interface_dict["name"] = i
+        interfaces = []
+        for interface in ifinfo_list:
+            if interface.split()[0].startswith("Vlan") or interface.split()[0].startswith("Loopback"):
+                continue
 
-            output1 = self.run("show interface {0}".format(interface_dict["name"]))
-            output1_list = output1.split("\n")
+            interface_dict = {}
+            interface_dict["name"] = interface.split()[0]
 
             ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
-            for j in output1_list:
-                if "line protocol " in j:
-                    if "administratively down" in j:
-                        admin_state = "down"
-                    else: admin_state = "up"
-                    interface_dict["admin_state"] = admin_state
-                    link_state = j.split(",")[1].replace("line protocol is ", "").replace("administratively", "").strip()
-                    interface_dict["link_state"] = link_state
-                if "BW " in j:
-                    for k in j.split(","):
-                        if "BW" in k: speed = k.replace("BW ", "").strip()
-                    interface_dict["speed"] = speed
-                if "Description:" in j:
-                    description = j.replace("Description:", "")
-                    interface_dict["description"] = description.replace("\r", "")
+            for row in interface.split("\n"):
+                if "line protocol " in row:
+                    if "administratively down" in row:
+                        interface_dict["admin_state"] = "down"
+                    else:
+                        interface_dict["admin_state"] = "up"
+                    interface_dict["link_state"] = row.split(",")[1].replace("line protocol is ", "").replace("administratively", "").strip()
+                if "BW " in row:
+                    for i in row.split(","):
+                        if "BW" in i:
+                            interface_dict["speed"] = i.replace("BW ", "").strip()
+                if "Description:" in row:
+                    interface_dict["description"] = row.replace("Description:", "").replace("\r", "")
 
             ### lag_group_dict から物理インターフェースが所属するBundle-Etherポートを取得する
-            if i in lag_group_dict.keys():
-                interface_dict["lag_group"] = lag_group_dict[i]
+            if interface_dict["name"] in lag_group_dict.keys():
+                interface_dict["lag_group"] = lag_group_dict[interface_dict["name"]]
 
             ### Bundle-Ether インターフェースに対して、所属するメンバーポートを並べた配列を作る
             if "Bundle-Ether" in interface_dict["name"]:

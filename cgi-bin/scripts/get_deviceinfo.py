@@ -7,7 +7,9 @@ from get_deviceinfo_cloudengine import *
 from get_deviceinfo_netengine import *
 from get_deviceinfo_ios import *
 from get_deviceinfo_iosxr import *
+from get_deviceinfo_iosxe import *
 from get_deviceinfo_brocade import *
+from get_deviceinfo_nxos import *
 
 class session_create:
     def __init__(self,host,domain,user,password,ostype):
@@ -24,8 +26,12 @@ class session_create:
             self.sess = session_create_ios(host, domain, user, password)
         if ostype == "iosxr" :
             self.sess = session_create_iosxr(host, domain, user, password)
+        if ostype == "iosxe" :
+            self.sess = session_create_iosxe(host, domain, user, password)
         if ostype == "brocade" :
             self.sess = session_create_brocade(host, domain, user, password)
+        if ostype == "nxos" :
+            self.sess = session_create_nxos(host, domain, user, password)
 
     def run(self, command):
         return self.sess.run(command)

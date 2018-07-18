@@ -18,14 +18,14 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 config = configparser.ConfigParser()
 config.read("config.txt")
-db_user = config["database"]["username"]
-db_pass = config["database"]["password"]
-db_name = config["database"]["database"]
-db_host = config["database"]["host"]
+db_user = config["database"]["username"].replace('"', '')
+db_pass = config["database"]["password"].replace('"', '')
+db_name = config["database"]["database"].replace('"', '')
+db_host = config["database"]["host"].replace('"', '')
 
-username = config["device"]["username"]
-password = config["device"]["password"]
-domain = config["env"]["domain"]
+username = config["device"]["username"].replace('"', '')
+password = config["device"]["password"].replace('"', '')
+domain = config["env"]["domain"].replace('"', '')
 
 
 #############################################
@@ -54,14 +54,16 @@ conn.commit()
 ### [ホスト名, モデル名, ベンダー名, シリアルNo, バージョン] の順にDBに格納
 
 ostype_dct = {"juniper": "junos", 
-                 "catalyst": "ios", 
-                 "cisco": "ios", 
-                 "asr": "iosxr", 
-                 "cloudengine": "cloudengine", 
-                 "netengine": "netengine", 
-                 "brocade": "brocade", 
-                 "arista": "arista"
-                }
+              "catalyst": "ios", 
+              "cisco": "ios", 
+              "asr9k": "iosxr", 
+              "asr1k": "iosxe", 
+              "nexus": "nxos",
+              "cloudengine": "cloudengine", 
+              "netengine": "netengine", 
+              "brocade": "brocade", 
+              "arista": "arista"
+              }
 
 for dct in node_list:
     host = dct["name"]

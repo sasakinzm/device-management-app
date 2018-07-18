@@ -18,14 +18,14 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 config = configparser.ConfigParser()
 config.read("config.txt")
-db_user = config["database"]["username"]
-db_pass = config["database"]["password"]
-db_name = config["database"]["database"]
-db_host = config["database"]["host"]
+db_user = config["database"]["username"].replace('"', '')
+db_pass = config["database"]["password"].replace('"', '')
+db_name = config["database"]["database"].replace('"', '')
+db_host = config["database"]["host"].replace('"', '')
 
-username = config["device"]["username"]
-password = config["device"]["password"]
-domain = config["env"]["domain"]
+username = config["device"]["username"].replace('"', '')
+password = config["device"]["password"].replace('"', '')
+domain = config["env"]["domain"].replace('"', '')
 
 ### DB 接続
 conn = mysql.connector.connect(user=db_user, password=db_pass, database=db_name, host=db_host)
@@ -48,7 +48,9 @@ for i in data:
 ostype_dct = {"juniper": "junos", 
               "catalyst": "ios", 
               "cisco": "ios", 
-              "asr": "iosxr", 
+              "asr9k": "iosxr", 
+              "asr1k": "iosxe", 
+              "nexus": "nxos",
               "cloudengine": "cloudengine", 
               "netengine": "netengine", 
               "brocade": "brocade", 

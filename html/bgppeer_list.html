@@ -5,6 +5,10 @@
 <body>
 
 <?php
+
+error_reporting(E_ALL & ~ E_NOTICE);
+
+### フォームデータの変数化
 $keyword_hostname = $_GET['keyword_hostname'];
 $keyword_peer_address = $_GET['keyword_peer_address'];
 $keyword_peer_type = $_GET['keyword_peer_type'];
@@ -13,22 +17,20 @@ $keyword_asn = $_GET['keyword_asn'];
 $keyword_peer_description = $_GET['keyword_peer_description'];
 $match_condition = $_GET['match_condition'];
 
-print("<h1> BGP Peer List </h1>");
-print("検索キーワード: $keyword_hostname $keyword_peer_address $keyword_peer_type $keyword_state $keyword_asn $keyword_peer_description");
 
-print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
-print("<tr>");
-print("<td> ホスト名 </td>");
-print("<td> ピアアドレス </td>");
-print("<td> タイプ </td>");
-print("<td> ピア状態 </td>");
-print("<td> AS番号 </td>");
-print("<td> 受信経路数 </td>");
-print("<td> 広報経路数 </td>");
-print("<td> Description </td>");
-print("</tr>");
+### コンフィグ読み込み
+$config = parse_ini_file("../cgi-bin/scripts/config.txt", true);
+$db_user = $config["database"]["username"];
+$db_pass = $config["database"]["password"];
+$db_name = $config["database"]["database"];
+$db_host = $config["database"]["host"];
+$username = $config["device"]["username"];
+$password = $config["device"]["password"];
+$domain = $config["env"]["domain"];
 
-$link = mysql_connect('localhost', 'root', 'password');
+
+### MYSQL接続、クエリ実行
+$link = mysql_connect($db_host, $db_user, $db_pass);
 if (!$link) {
     die('接続失敗です。'.mysql_error());
 }
@@ -41,8 +43,6 @@ if (!$db_selected){
 mysql_set_charset('utf8');
 
 $result = mysql_query("SELECT * FROM bgppeer_list ORDER BY hostname");
-
-
 
 if ($match_condition == "exact") {
     $result = mysql_query("SELECT
@@ -73,13 +73,30 @@ if (!$result) {
     die('クエリーが失敗しました。'.mysql_error());
 }
 
+
+### HTML作成
+print("<h1> BGP Peer List </h1>");
+print("検索キーワード: $keyword_hostname $keyword_peer_address $keyword_peer_type $keyword_state $keyword_asn $keyword_peer_description");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> ピアアドレス </td>");
+print("<td> タイプ </td>");
+print("<td> ピア状態 </td>");
+print("<td> AS番号 </td>");
+print("<td> 受信経路数 </td>");
+print("<td> 広報経路数 </td>");
+print("<td> Description </td>");
+print("</tr>");
+
 while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
-    print("<td>".$row['hostname']."</td>");
+    print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
     print("<td>".$row['peer_address']."</td>");
     print("<td>".$row['peer_type']."</td>");
     print("<td>".$row['state']."</td>");
-    print("<td>".$row['asn']."</td>");
+    print("<td><a href='https://www.peeringdb.com/net?asn=".$row['asn']."' target='_blank'>".$row['asn']."</a></td>");
     print("<td>".$row['received_route_num']."</td>");
     print("<td>".$row['advertise_route_num']."</td>");
     print("<td>".$row['peer_description']."</td>");

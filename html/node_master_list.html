@@ -5,22 +5,38 @@
 <body>
 
 <?php
+
+error_reporting(E_ALL & ~ E_NOTICE);
+
+### フォームデータの変数化
 $keyword_host = $_GET['keyword_host'];
 $keyword_location = $_GET['keyword_location'];
 $keyword_type = $_GET['keyword_type'];
 $keyword_mgmt_ip = $_GET['keyword_mgmt_ip'];
 
-print("<h1> Device Master </h1>");
-print("検索キーワード: $keyword_host $keyword_location $keyword_type $keyword_mgmt_ip");
+$keyword_host_add = $_GET['keyword_host_add'];
+$keyword_location_add = $_GET['keyword_location_add'];
+$keyword_type_add = $_GET['keyword_type_add'];
+$keyword_mgmt_ip_add = $_GET['keyword_mgmt_ip_add'];
 
-print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
-print("<tr>");
-print("<td> ホスト名 </td>");
-print("<td> 拠点 </td>");
-print("<td> タイプ </td>");
-print("<td> 管理IPアドレス </td>");
-print("</tr>");
+$keyword_host_del = $_GET['keyword_host_del'];
+$keyword_location_del = $_GET['keyword_location_del'];
+$keyword_type_del = $_GET['keyword_type_del'];
+$keyword_mgmt_ip_del = $_GET['keyword_mgmt_ip_del'];
 
+
+### コンフィグ読み込み
+$config = parse_ini_file("../cgi-bin/scripts/config.txt", true);
+$db_user = $config["database"]["username"];
+$db_pass = $config["database"]["password"];
+$db_name = $config["database"]["database"];
+$db_host = $config["database"]["host"];
+$username = $config["device"]["username"];
+$password = $config["device"]["password"];
+$domain = $config["env"]["domain"];
+
+
+### MYSQL接続、クエリ実行
 $link = mysql_connect('localhost', 'root', 'password');
 if (!$link) {
     die('接続失敗です。'.mysql_error());
@@ -33,24 +49,66 @@ if (!$db_selected){
 
 mysql_set_charset('utf8');
 
-$result = mysql_query("SELECT * FROM node_list");
+### デバイス追加
+if (empty($keyword_host_add) == false and empty($keyword_location_add) == false and empty($keyword_type_add) == false and empty($keyword_mgmt_ip_add) == false) {
+    mysql_query("INSERT INTO
+                     node_master_list
+                 (
+                     name
+                 ,   location
+                 ,   type
+                 ,   mgmt_ip
+                 ) VALUES (
+                     '{$keyword_host_add}'
+                 ,   '{$keyword_location_add}'
+                 ,   '{$keyword_type_add}'
+                 ,   '{$keyword_mgmt_ip_add}'
+                 )"
+               );
+}
 
-$result = mysql_query("SELECT
-                           *
-                       FROM
-                           node_list
-                       WHERE
-                           name LIKE '%{$keyword_host}%'
-                       AND location LIKE '%{$keyword_location}%'
-                       AND type LIKE '%{$keyword_type}%'
-                       AND mgmt_ip LIKE '%{$keyword_mgmt_ip}%'
-                     ");
+### デバイス削除
+if (empty($keyword_host_del) == false and empty($keyword_location_del) == false and empty($keyword_type_del) == false and empty($keyword_mgmt_ip_del) == false) {
+    mysql_query("DELETE FROM
+                     node_master_list
+                 WHERE
+                     name = '{$keyword_host_del}'
+                 AND location = '{$keyword_location_del}'
+                 AND type = '{$keyword_type_del}'
+                 AND mgmt_ip = '{$keyword_mgmt_ip_del}'
+               ");
+}
 
-if (!$result) {
+### デバイス一覧作成、表示
+$result_search = mysql_query("SELECT
+                                  *
+                              FROM
+                                 node_master_list
+                              WHERE
+                                  name LIKE '%{$keyword_host}%'
+                              AND location LIKE '%{$keyword_location}%'
+                              AND type LIKE '%{$keyword_type}%'
+                              AND mgmt_ip LIKE '%{$keyword_mgmt_ip}%'
+                             ");
+
+if (!$result_search) {
     die('クエリーが失敗しました。'.mysql_error());
 }
 
-while ($row = mysql_fetch_assoc($result)) {
+
+### HTML作成
+print("<h1> Device Master </h1>");
+print("検索キーワード: $keyword_host $keyword_location $keyword_type $keyword_mgmt_ip");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> 拠点 </td>");
+print("<td> タイプ </td>");
+print("<td> 管理IPアドレス </td>");
+print("</tr>");
+
+while ($row = mysql_fetch_assoc($result_search)) {
     print("<tr>");
     print("<td>".$row['name']."</td>");
     print("<td>".$row['location']."</td>");

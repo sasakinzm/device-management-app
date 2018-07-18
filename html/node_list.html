@@ -5,6 +5,10 @@
 <body>
 
 <?php
+
+error_reporting(E_ALL & ~ E_NOTICE);
+
+### フォームデータの変数化 
 $keyword_host = $_GET['keyword_host'];
 $keyword_location = $_GET['keyword_location'];
 $keyword_model = $_GET['keyword_model'];
@@ -13,22 +17,20 @@ $keyword_os_version = $_GET['keyword_os_version'];
 $keyword_mgmt_ip = $_GET['keyword_mgmt_ip'];
 $match_condition = $_GET['match_condition'];
 
-print("<h1> Device List </h1>");
 
-print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_type $keyword_os_version $keyword_mgmt_ip");
+### コンフィグ読み込み
+$config = parse_ini_file("../cgi-bin/scripts/config.txt", true);
+$db_user = $config["database"]["username"];
+$db_pass = $config["database"]["password"];
+$db_name = $config["database"]["database"];
+$db_host = $config["database"]["host"];
+$username = $config["device"]["username"];
+$password = $config["device"]["password"];
+$domain = $config["env"]["domain"];
 
-print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
-print("<tr>");
-print("<td> ホスト名 </td>");
-print("<td> 拠点 </td>");
-print("<td> モデル名 </td>");
-print("<td> タイプ </td>");
-print("<td> 筐体シリアルナンバー </td>");
-print("<td> OSバージョン </td>");
-print("<td> 管理IPアドレス </td>");
-print("</tr>");
 
-$link = mysql_connect('localhost', 'root', 'password');
+### MYSQL接続、クエリ実行
+$link = mysql_connect($db_host, $db_user, $db_pass);
 if (!$link) {
     die('接続失敗です。'.mysql_error());
 }
@@ -58,15 +60,31 @@ if (!$result) {
     die('クエリーが失敗しました。'.mysql_error());
 }
 
+
+### HTML作成
+print("<h1> Device List </h1>");
+print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_type $keyword_os_version $keyword_mgmt_ip");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> 拠点 </td>");
+print("<td> モデル名 </td>");
+print("<td> タイプ </td>");
+print("<td> 筐体シリアルナンバー </td>");
+print("<td> OSバージョン </td>");
+print("<td> 管理IPアドレス </td>");
+print("</tr>");
+
 while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
-    print("<td>".$row['name']."</td>");
+    print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['name']."</a></td>");
     print("<td>".$row['location']."</td>");
     print("<td>".$row['model']."</td>");
     print("<td>".$row['type']."</td>");
     print("<td>".$row['serial']."</td>");
     print("<td>".$row['version']."</td>");
-    print("<td>".$row['mgmt_ip']."</td>");
+    print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['mgmt_ip']."</a></td>");
     print("<td> <a href='interface_list.html?keyword_hostname=".$row['name']."&match_condition=exact' targt='contents'>IF一覧</a></td>");
     print("<td> <a href='bgppeer_list.html?keyword_hostname=".$row['name']."&match_condition=exact' targt='contents'>BGPピア一覧</a></td>");
     print("</tr>");

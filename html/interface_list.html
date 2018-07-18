@@ -5,6 +5,10 @@
 <body>
 
 <?php
+
+error_reporting(E_ALL & ~ E_NOTICE);
+
+### フォームデータの変数化
 $keyword_hostname = $_GET['keyword_hostname'];
 $keyword_interface_name = $_GET['keyword_interface_name'];
 $keyword_admin_state = $_GET['keyword_admin_state'];
@@ -15,6 +19,19 @@ $keyword_lag_member = $_GET['keyword_lag_member'];
 $keyword_description = $_GET['keyword_description'];
 $match_condition = $_GET['match_condition'];
 
+
+### コンフィグ読み込み
+$config = parse_ini_file("../cgi-bin/scripts/config.txt", true);
+$db_user = $config["database"]["username"];
+$db_pass = $config["database"]["password"];
+$db_name = $config["database"]["database"];
+$db_host = $config["database"]["host"];
+$username = $config["device"]["username"];
+$password = $config["device"]["password"];
+$domain = $config["env"]["domain"];
+
+
+### MYSQL接続、表作成
 print("<h1> Interface List </h1>");
 print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description");
 
@@ -29,7 +46,7 @@ print("<td> LAGグループ </td>");
 print("<td> Description </td>");
 print("</tr>");
 
-$link = mysql_connect('localhost', 'root', 'password');
+$link = mysql_connect($db_host, $db_user, $db_pass);
 if (!$link) {
     die('接続失敗です。'.mysql_error());
 }
@@ -77,7 +94,7 @@ if (!$result) {
 
 while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
-    print("<td>".$row['hostname']."</td>");
+    print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
     print("<td>".$row['interface_name']."</td>");
     print("<td>".$row['admin_state']."</td>");
     print("<td>".$row['link_state']."</td>");

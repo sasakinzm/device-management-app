@@ -116,6 +116,39 @@ class session_create_nxos(interfaceinfo):
         return interfaces
 
 
+    def get_bgppeer(self):
+        bgppeers = []
+        peerinfo = self.run("show bgp ipv4 unicast neighbors")
+        peerinfo_list = peerinfo.split("\r\n\r\nBGP neighbor is")
+        peerinfo_list = [ "BGP neighbor is" + i for i in peerinfo_list]
+
+        for peer in peerinfo_list:
+            bgppeer_dict = {}
+            for line in peer.split("\n"):
+                if "BGP neighbor is " in line:
+                    bgppeer_dict["addr"] = line.split(",")[0].replace("BGP neighbor is", "").strip()
+                    bgppeer_dict["asn"] = line.split(",")[1].replace("remote AS", "").replace("\r", "").strip()
+                    bgppeer_dict["peer_type"] = line.split(",")[2].replace("link", "").replace("\r", "").strip()
+                if "BGP state =" in line:
+                    bgppeer_dict["state"] = line.split(",")[0].replace("BGP state =", "").replace("\r", "").strip()
+                if "Description:" in line:
+                    bgppeer_dict["peer_description"] = line.replace("Description:", "").replace('"', '').replace("\r", "").strip()
+
+            ### 経路数を確認するのは面倒そうなのでいったん未実装とする
+            bgppeer_dict["rcvroutes"] = "No_Impl"
+            bgppeer_dict["advroutes"] = "No_Impl"
+
+            ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
+            keys = ["addr", "asn", "peer_type", "state", "rcvroutes", "advroutes", "peer_description"]
+            key_diff = list(set(keys) - set(bgppeer_dict.keys()))
+            for key in key_diff:
+                bgppeer_dict[key] = "-"
+
+            bgppeers.append(bgpinfo(bgppeer_dict["addr"], bgppeer_dict["peer_type"], bgppeer_dict["state"], bgppeer_dict["asn"], bgppeer_dict["rcvroutes"], bgppeer_dict["advroutes"], bgppeer_dict["peer_description"]))
+
+        return bgppeers
+
+
     def close(self):
         self.conn.close()
 

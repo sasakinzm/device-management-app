@@ -142,44 +142,24 @@ class session_create_ios(interfaceinfo, bgpinfo):
 
     def get_bgppeer(self):
         bgppeers = []
-        stdout = self.run("show bgp ipv4 unicast summary")
-        stdout_list = stdout.split("\n")
-        for line in stdout_list:
-            if line.startswith("Neighbor") :
-                cut_index = stdout_list.index(line)
-        stdout_list = stdout_list[cut_index + 1:]
-        peer_list = [ i.split()[0].strip() for i in stdout_list ]
+        peerinfo = self.run("show bgp ipv4 unicast neighbors")
+        peerinfo_list = peerinfo.split("\r\n\r\nBGP neighbor is")
+        peerinfo_list = [ "BGP neighbor is" + i for i in peerinfo_list]
 
-        for peer in peer_list:
+        for peer in peerinfo_list:
             bgppeer_dict = {}
-            output1 = self.run("show bgp ipv4 unicast neighbors {0}".format(peer))
-            output1_list = output1.split("\n")
-            for line in output1_list:
+            for line in peer.split("\n"):
                 if "BGP neighbor is " in line:
-                    peer_addr = line.split(",")[0].replace("BGP neighbor is ", "").replace("\r", "").strip()
-                    bgppeer_dict["addr"] = peer_addr
-                    asn = line.split(",")[1].replace("remote AS", "").replace("\r", "").strip()
-                    bgppeer_dict["asn"] = asn
-                    peer_type = line.split(",")[2].replace("link", "").replace("\r", "").strip()
-                    bgppeer_dict["peer_type"] = peer_type
+                    bgppeer_dict["addr"] = line.split(",")[0].replace("BGP neighbor is ", "").replace("\r", "").strip()
+                    bgppeer_dict["asn"] = line.split(",")[1].replace("remote AS", "").replace("\r", "").strip()
+                    bgppeer_dict["peer_type"] = line.split(",")[2].replace("link", "").replace("\r", "").strip()
                 if "BGP state =" in line:
-                    state = line.split(",")[0].replace("BGP state =", "").replace("\r", "").strip()
-                    bgppeer_dict["state"] = state
+                    bgppeer_dict["state"] = line.split(",")[0].replace("BGP state =", "").replace("\r", "").strip()
                 if "Description:" in line:
-                    peer_description = line.split(":")[1].replace("Description:", "").replace("\r", "").strip()
-                    bgppeer_dict["peer_description"] = peer_description
-
-            match_str = "Total number of prefixes"
-            output2 = self.run("show bgp ipv4 unicast neighbors {0} received-routes  | include {1}".format(peer, match_str))
-            output2_list = output2.split("\n")
-            for line in output2_list:
-                if match_str in line:
-                    bgppeer_dict["rcvroutes"] = line.replace(match_str, "").strip()
-            output3 = self.run("show bgp ipv4 unicast neighbors {0} advertised-routes  | include {1}".format(peer, match_str))
-            output3_list = output3.split("\n")
-            for line in output3_list:
-                if match_str in line:
-                    bgppeer_dict["advroutes"] = line.replace(match_str, "").strip()
+                    bgppeer_dict["peer_description"] = line.split(":")[1].replace("Description:", "").replace("\r", "").strip()
+                if "Prefixes Current:" in line:
+                    bgppeer_dict["rcvroutes"] = line.split()[3]
+                    bgppeer_dict["advroutes"] = line.split()[2]
 
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
             keys = ["addr", "asn", "peer_type", "state", "rcvroutes", "advroutes", "peer_description"]

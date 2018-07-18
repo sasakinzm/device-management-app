@@ -152,8 +152,8 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
 
     def get_bgppeer(self):
         bgppeers = []
-        peerinfo = self.run("show bgp peer verbose")
-        peerinfo_list = bgppeers.split("\r\n BGP Peer is ")
+        peerinfo = self.run("display bgp peer verbose")
+        peerinfo_list = peerinfo.split("\r\n BGP Peer is ")
 
         for peer in peerinfo_list:
             bgppeer_dict = {}

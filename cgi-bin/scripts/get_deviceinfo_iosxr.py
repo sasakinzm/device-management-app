@@ -142,6 +142,46 @@ class session_create_iosxr(interfaceinfo):
         return interfaces
 
 
+    def get_bgppeer(self):
+        bgppeers = []
+        peerinfo = self.run("show bgp ipv4 unicast neighbors")
+        peerinfo_list = peerinfo.split("\r\n\r\nBGP neighbor is")
+        peerinfo_list = [ "BGP neighbor is" + i for i in peerinfo_list]
+
+        for peer in peerinfo_list:
+            bgppeer_dict = {}
+            for line in peer.split("\n"):
+                if "BGP neighbor is " in line:
+                    bgppeer_dict["addr"] = line.replace("BGP neighbor is", "").strip()
+                if "Remote AS" in line:
+                    bgppeer_dict["asn"] = line.split(",")[0].replace("Remote AS", "").replace("\r", "").strip()
+                    bgppeer_dict["peer_type"] = line.split(",")[2].replace("link", "").replace("\r", "").strip()
+                if "BGP state =" in line:
+                    bgppeer_dict["state"] = line.split(",")[0].replace("BGP state =", "").replace("\r", "").strip()
+                if "Description:" in line:
+                    bgppeer_dict["peer_description"] = line.split(":")[1].replace("Description:", "").replace("\r", "").strip()
+                if "accepted prefixes," in line:
+                    bgppeer_dict["rcvroutes"] = line.split()[0]
+
+            try:
+                advroutes = self.run("show bgp ipv4 unicast neighbor {0} advertised-count".format(bgppeer_dict["addr"]))
+                for i in advroutes.split("\n"):
+                    if "No of prefixes Advertised:" in i:
+                        bgppeer_dict["advroutes"] = i.replace("No of prefixes Advertised:", "").replace("\r", "").strip()
+            except:
+                pass
+
+            ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
+            keys = ["addr", "asn", "peer_type", "state", "rcvroutes", "advroutes", "peer_description"]
+            key_diff = list(set(keys) - set(bgppeer_dict.keys()))
+            for key in key_diff:
+                bgppeer_dict[key] = "-"
+
+            bgppeers.append(bgpinfo(bgppeer_dict["addr"], bgppeer_dict["peer_type"], bgppeer_dict["state"], bgppeer_dict["asn"], bgppeer_dict["rcvroutes"], bgppeer_dict["advroutes"], bgppeer_dict["peer_description"]))
+
+        return bgppeers
+
+
     def close(self):
         self.conn.close()
 

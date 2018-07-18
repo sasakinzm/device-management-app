@@ -154,6 +154,40 @@ class session_create_junos(interfaceinfo):
         return interfaces
 
 
+    def get_bgppeer(self):
+        bgppeers = []
+        peerinfo = self.run("show bgp neighbor")
+        peerinfo_list = peerinfo.split("\r\n\r\nPeer:")
+        peerinfo_list = [ "Peer:" + i for i in peerinfo_list]
+
+        for peer in peerinfo_list:
+            bgppeer_dict = {}
+            for line in peer.split("\n"):
+                if "Peer ID:" in line:
+                    bgppeer_dict["addr"] = line.split("  ")[1].replace("Peer ID: ", "").replace("\r", "").strip()
+                if "Peer:" in line:
+                    bgppeer_dict["asn"] = line.split()[3].replace("\r", "").strip()
+                if "Type:" in line:
+                    bgppeer_dict["peer_type"] = line.split("  ")[1].replace("Type: ", "").replace("\r", "").strip()
+                    bgppeer_dict["state"] = line.split("  ")[3].replace("State: ", "").replace("\r", "").strip()
+                if "Description:" in line:
+                    bgppeer_dict["peer_description"] = line.split(":")[1].replace("Description:", "").replace("\r", "").strip()
+                if "Received prefixes:" in line:
+                    bgppeer_dict["rcvroutes"] = line.split()[2]
+                if "Advertised prefixes:" in line:
+                    bgppeer_dict["advroutes"] = line.split()[2]
+
+            ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
+            keys = ["addr", "asn", "peer_type", "state", "rcvroutes", "advroutes", "peer_description"]
+            key_diff = list(set(keys) - set(bgppeer_dict.keys()))
+            for key in key_diff:
+                bgppeer_dict[key] = "-"
+
+            bgppeers.append(bgpinfo(bgppeer_dict["addr"], bgppeer_dict["peer_type"], bgppeer_dict["state"], bgppeer_dict["asn"], bgppeer_dict["rcvroutes"], bgppeer_dict["advroutes"], bgppeer_dict["peer_description"]))
+
+        return bgppeers
+
+
     def close(self):
         self.conn.close()
 

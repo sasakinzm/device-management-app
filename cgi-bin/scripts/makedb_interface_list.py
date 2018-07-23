@@ -83,6 +83,7 @@ for dct in node_list:
             lag_group = i.lag_group
             lag_member = i.lag_member
             description = i.description
+            media_type = i.media_type
 
             sql_insert_interface_list = '''
                                         INSERT
@@ -97,10 +98,11 @@ for dct in node_list:
                                         , lag_group
                                         , lag_member
                                         , description
+                                        , media_type
                                         ) VALUES (
-                                          "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}"
+                                          "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}"
                                         )
-                                       '''.format(host, ifname, admin_state, link_state, speed, lag_group, lag_member, description)
+                                       '''.format(host, ifname, admin_state, link_state, speed, lag_group, lag_member, description, media_type)
 
             cur.execute(sql_insert_interface_list)
             conn.commit()

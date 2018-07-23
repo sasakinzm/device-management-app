@@ -170,6 +170,11 @@ class session_create_nxos(interfaceinfo):
             for key in key_diff:
                 bgppeer_dict[key] = "-"
 
+            ### 意図しない値を修正・除去する
+            # addr, asn, peer_type のどれかに値がないものは捨てる
+            if bgppeer_dict["addr"] == "-" or bgppeer_dict["asn"] == "-" or bgppeer_dict["peer_type"] == "-":
+                continue
+
             bgppeers.append(bgpinfo(bgppeer_dict["addr"], bgppeer_dict["peer_type"], bgppeer_dict["state"], bgppeer_dict["asn"], bgppeer_dict["rcvroutes"], bgppeer_dict["advroutes"], bgppeer_dict["peer_description"]))
 
         return bgppeers

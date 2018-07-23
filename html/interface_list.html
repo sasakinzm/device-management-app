@@ -109,6 +109,7 @@ while ($row = mysql_fetch_assoc($result)) {
 }
 
 print("</table>");
+print("行数: ".mysql_num_rows($result));
 
 $close_flag = mysql_close($link);
 

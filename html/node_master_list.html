@@ -118,6 +118,7 @@ while ($row = mysql_fetch_assoc($result_search)) {
 }
 
 print("</table>");
+print("行数: ".mysql_num_rows($result_search));
 
 $close_flag = mysql_close($link);
 

@@ -17,6 +17,7 @@ $keyword_bandwidth = $_GET['keyword_bandwidth'];
 $keyword_lag_group = $_GET['keyword_lag_group'];
 $keyword_lag_member = $_GET['keyword_lag_member'];
 $keyword_description = $_GET['keyword_description'];
+$keyword_media_type = $_GET['keyword_media_type'];
 $match_condition = $_GET['match_condition'];
 
 
@@ -33,7 +34,7 @@ $domain = $config["env"]["domain"];
 
 ### MYSQL接続、表作成
 print("<h1> Interface List </h1>");
-print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description");
+print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description $keyword_media_type");
 
 print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
 print("<tr>");
@@ -42,6 +43,7 @@ print("<td> インターフェース </td>");
 print("<td> Adminステート </td>");
 print("<td> リンク状態 </td>");
 print("<td> 帯域幅 </td>");
+print("<td> メディアタイプ </td>");
 print("<td> LAGグループ </td>");
 print("<td> Description </td>");
 print("</tr>");
@@ -84,6 +86,7 @@ if ($match_condition == "exact") {
                            AND bandwidth LIKE '%{$keyword_bandwidth}%'
                            AND lag_group LIKE '%{$keyword_lag_group}%'
                            AND description LIKE '%{$keyword_description}%'
+                           AND media_type LIKE '%{$keyword_media_type}%'
                            ORDER BY hostname
                          ");
 }
@@ -99,6 +102,7 @@ while ($row = mysql_fetch_assoc($result)) {
     print("<td>".$row['admin_state']."</td>");
     print("<td>".$row['link_state']."</td>");
     print("<td>".$row['bandwidth']."</td>");
+    print("<td>".$row['media_type']."</td>");
     print("<td>".$row['lag_group']."</td>");
     print("<td>".$row['description']."</td>");
     print("</tr>");

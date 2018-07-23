@@ -89,6 +89,18 @@ class session_create_ios(interfaceinfo, bgpinfo):
                 for j in lag_member:
                     lag_group_dict[j] = ifname
 
+        ### 各インターフェースのメディアタイプを格納したディクショナリを作る(後で使う)
+        media_dict = {}
+        mediainfo = self.run("show interface status")
+        mediainfo_list = mediainfo.split("\r\n")
+        for line in mediainfo_list:
+            try:
+                interface_name = line.split()[0].replace("Gi", "GigabitEthernet").replace("Te", "TenGigabitEthernet")
+                media = line.split()[-1]
+                media_dict[interface_name] = media
+            except:
+                pass
+
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
         interfaces = []
@@ -133,11 +145,25 @@ class session_create_ios(interfaceinfo, bgpinfo):
                         lag_member.append(j)
                 interface_dict["lag_member"] = lag_member
 
+            ### メディアタイプを決める
+            try:
+                interface_dict["media_type"] = media_dict[interface_dict["name"]]
+            except:
+                pass
+
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
             keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member", "media_type"]
             key_diff = list(set(keys) - set(interface_dict.keys()))
             for key in key_diff:
                 interface_dict[key] = "-" 
+
+            ### 意図しない値を修正・除去する
+            # admin_state と link_state が共に値がないものは捨てる
+            if interface_dict["admin_state"] == "-" and interface_dict["link_state"] == "-":
+                continue
+            #メディアタイプが変な値だったら "-" に変更する
+            if interface_dict["media_type"] in ["Present", "Connector", "Transceiver", "unknown media type"]:
+                interface_dict["media_type"] = "-"
 
             interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"], interface_dict["media_type"]))
 

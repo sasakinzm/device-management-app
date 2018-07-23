@@ -152,6 +152,14 @@ class session_create_iosxr(interfaceinfo):
             for key in key_diff:
                 interface_dict[key] = "-" 
 
+            ### 意図しない値を修正・除去する
+            # admin_state と link_state が共に値がないものは捨てる
+            if interface_dict["admin_state"] == "-" and interface_dict["link_state"] == "-":
+                continue
+            #メディアタイプが変な値だったら "-" に変更する
+            if interface_dict["media_type"] in ["Present", "Connector", "Transceiver", "unknown media type"]:
+                interface_dict["media_type"] = "-"
+
             interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"], interface_dict["media_type"]))
 
         return interfaces

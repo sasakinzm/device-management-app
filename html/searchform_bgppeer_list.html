@@ -6,40 +6,46 @@
 
 <h1> 検索フォーム </h1><hr>
 
-<form action = "bgppeer_list.html" method = "get" target = "contents">
+<form action = 'bgppeer_list.html' method = 'get' target = 'contents'>
 
-<table border=1 width='100%'>
-<tr>
-<td> ホスト名 </td>
-<td> <input type = "text" name = "keyword_hostname"> </td>
-</tr>
-<tr>
-<td> ピアアドレス </td>
-<td> <input type = "text" name = "keyword_peer_address"> </td>
-</tr>
-<tr>
-<td> タイプ </td>
-<td> <input type = "text" name = "keyword_peer_type"> </td>
-</tr>
-<tr>
-<td> ピア状態 </td>
-<td> <input type = "text" name = "keyword_state"> </td>
-</tr>
-<tr>
-<td> AS番号 </td>
-<td> <input type = "text" name = "keyword_asn"> </td>
-</tr>
-<tr>
-<td> Description </td>
-<td> <input type = "text" name = "keyword_peer_description"> </td>
-</tr>
-</table>
+<?php
 
-キーワードは部分一致検索 <br/>
-複数条件入力時はAND検索 <br/>
+$keyword_hostname = $_GET['keyword_hostname'];
 
-<input type = "submit" value = "検索">
-</form>
+print("<table border=1 width='100%'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> <input type = 'text' name = 'keyword_hostname' value='".$keyword_hostname."'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> ピアアドレス </td>");
+print("<td> <input type = 'text' name = 'keyword_peer_address'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> タイプ </td>");
+print("<td> <input type = 'text' name = 'keyword_peer_type'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> ピア状態 </td>");
+print("<td> <input type = 'text' name = 'keyword_state'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> AS番号 </td>");
+print("<td> <input type = 'text' name = 'keyword_asn'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> Description </td>");
+print("<td> <input type = 'text' name = 'keyword_peer_description'> </td>");
+print("</tr>");
+print("</table>");
+
+print("キーワードは部分一致検索 <br/>");
+print("複数条件入力時はAND検索 <br/>");
+
+print("<input type = 'submit' value = '検索'>");
+print("</form>");
+
+?>
 
 </body>
 </html>

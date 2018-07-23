@@ -6,48 +6,59 @@
 
 <h1> 検索フォーム </h1><hr>
 
-<form action = "interface_list.html" method = "get" target = "contents">
+<form action = 'interface_list.html' method = 'get' target = 'contents'>
 
-<table border=1 width='100%'>
-<tr>
-<td> ホスト名 </td>
-<td> <input type = "text" name = "keyword_hostname"> </td>
-</tr>
-<tr>
-<td> インターフェース名 </td>
-<td> <input type = "text" name = "keyword_interface_name"> </td>
-</tr>
-<tr>
-<td> Adminステート </td>
-<td> <input type = "text" name = "keyword_admin_state"> </td>
-</tr>
-<tr>
-<td> リンク状態 </td>
-<td> <input type = "text" name = "keyword_link_state"> </td>
-</tr>
-<tr>
-<td> 帯域幅 </td>
-<td> <input type = "text" name = "keyword_bandwidth"> </td>
-</tr>
-<tr>
-<td> LAGグループ </td>
-<td> <input type = "text" name = "keyword_lag_group"> </td>
-</tr>
-<tr>
-<td> LAGメンバー </td>
-<td> <input type = "text" name = "keyword_lag_member"> </td>
-</tr>
-<tr>
-<td> Description </td>
-<td> <input type = "text" name = "keyword_description"> </td>
-</tr>
-</table>
+<?php
 
-キーワードは部分一致検索 <br/>
-複数条件入力時はAND検索 <br/>
+$keyword_hostname = $_GET['keyword_hostname'];
 
-<input type = "submit" value = "検索">
-</form>
+print("<table border=1 width='100%'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> <input type = 'text' name = 'keyword_hostname' value='".$keyword_hostname."'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> インターフェース名 </td>");
+print("<td> <input type = 'text' name = 'keyword_interface_name'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> Adminステート </td>");
+print("<td> <input type = 'text' name = 'keyword_admin_state'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> リンク状態 </td>");
+print("<td> <input type = 'text' name = 'keyword_link_state'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> 帯域幅 </td>");
+print("<td> <input type = 'text' name = 'keyword_bandwidth'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> メディアタイプ </td>");
+print("<td> <input type = 'text' name = 'keyword_media_type'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> LAGグループ </td>");
+print("<td> <input type = 'text' name = 'keyword_lag_group'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> LAGメンバー </td>");
+print("<td> <input type = 'text' name = 'keyword_lag_member'> </td>");
+print("</tr>");
+print("<tr>");
+print("<td> Description </td>");
+print("<td> <input type = 'text' name = 'keyword_description'> </td>");
+print("</tr>");
+print("</table>");
+
+print("キーワードは部分一致検索 <br/>");
+print("複数条件入力時はAND検索 <br/>");
+
+print("<input type = 'submit' value = '検索'>");
+print("</form>");
+
+?>
 
 </body>
 </html>
+

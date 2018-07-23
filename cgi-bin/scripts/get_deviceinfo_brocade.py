@@ -97,6 +97,18 @@ class session_create_brocade(interfaceinfo):
             for j in i[3:]:
                 lag_group_dict[j.replace("*", "").strip()] = i[0].split(":")[1].strip()
 
+        ### 各インターフェースのメディアタイプを格納したディクショナリを作る(後で使う)
+        media_dict = {}
+        mediainfo = self.run("show interface status")
+        mediainfo_list = mediainfo.split("\r\n")
+        for line in mediainfo_list:
+            try:
+                interface_num = line.split()[1]
+                media = line.split()[5]
+                media_dict[interface_num] = media
+            except:
+                pass
+
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
         for interface in ifinfo_list:
@@ -132,14 +144,19 @@ class session_create_brocade(interfaceinfo):
                         lag_member.append(j)
                 interface_dict["lag_member"] = lag_member
 
+            ### メディアタイプを決める
+            try:
+                interface_dict["media_type"] = media_dict[interface.split()[1]]
+            except:
+                pass
 
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
-            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member"]
+            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member", "media_type"]
             key_diff = list(set(keys) - set(interface_dict.keys()))
             for key in key_diff:
                 interface_dict[key] = "-" 
 
-            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"]))
+            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"], interface_dict["media_type"]))
 
         return interfaces
 

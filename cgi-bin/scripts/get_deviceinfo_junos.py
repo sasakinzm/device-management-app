@@ -221,6 +221,9 @@ class session_create_junos(interfaceinfo):
             # addr, asn, peer_type のどれかに値がないものは捨てる
             if bgppeer_dict["addr"] == "-" or bgppeer_dict["asn"] == "-" or bgppeer_dict["peer_type"] == "-":
                 continue
+            # IPv6のみの情報は捨てる
+            if "NLRI advertised by peer: inet6-unicast" in peer:
+                continue
 
             bgppeers.append(bgpinfo(bgppeer_dict["addr"], bgppeer_dict["peer_type"], bgppeer_dict["state"], bgppeer_dict["asn"], bgppeer_dict["rcvroutes"], bgppeer_dict["advroutes"], bgppeer_dict["peer_description"]))
 

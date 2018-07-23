@@ -130,6 +130,10 @@ class session_create_iosxe(interfaceinfo):
                             interface_dict["speed"] = i.replace("BW ", "").strip()
                 if "Description:" in row:
                     interface_dict["description"] = row.replace("Description:", "").replace("\r", "")
+                if "media type is" in row:
+                    for i in row.split(","):
+                        if "media type is" in i:
+                            interface_dict["media_type"] = i.replace("media type is", "").replace("\r", "").strip()
 
             ### lag_group_dict から物理インターフェースが所属するBundle-Etherポートを取得する
             if interface_dict["name"] in lag_group_dict.keys():
@@ -144,12 +148,12 @@ class session_create_iosxe(interfaceinfo):
                 interface_dict["lag_member"] = lag_member
 
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
-            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member"]
+            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member", "media_type"]
             key_diff = list(set(keys) - set(interface_dict.keys()))
             for key in key_diff:
                 interface_dict[key] = "-" 
 
-            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"]))
+            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"], interface_dict["media_type"]))
 
         return interfaces
 

@@ -125,6 +125,16 @@ class session_create_netengine(interfaceinfo):
                             interface_dict["speed"] = i.replace("Port BW:", "").strip()
                 if "Description:" in row:
                     interface_dict["description"] = row.replace("Description:", "").replace("\r", "")
+                if "WaveLength:" in row:
+                    wavelength = row.split(",")[0].replace("WaveLength:", "").strip()
+                    if interface_dict["speed"] == "10G" and wavelength in ["840nm", "850nm", "860nm"]:
+                        interface_dict["media_type"] = "10Gbase-SR"
+                    elif interface_dict["speed"] == "10G" and wavelength == "1310nm":
+                        interface_dict["media_type"] = "10Gbase-LR"
+                    elif interface_dict["speed"] == "1G" and wavelength in ["840nm", "850nm", "860nm"]:
+                        interface_dict["media_type"] = "1000base-SX"
+                    elif interface_dict["speed"] == "1G" and wavelength == "1310nm":
+                        interface_dict["media_type"] = "1000base-LH"
 
             ### lag_group_dict から物理インターフェースが所属するEthTrunkポートを取得する
             if interface_dict["name"] in lag_group_dict.keys():
@@ -139,12 +149,12 @@ class session_create_netengine(interfaceinfo):
                 interface_dict["lag_member"] = lag_member
 
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
-            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member"]
+            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member", "media_type"]
             key_diff = list(set(keys) - set(interface_dict.keys()))
             for key in key_diff:
                 interface_dict[key] = "-" 
 
-            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"]))
+            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"], interface_dict["media_type"]))
 
         return interfaces
 

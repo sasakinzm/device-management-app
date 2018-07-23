@@ -96,6 +96,18 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
                 for j in lag_member:
                     lag_group_dict[j] = i
 
+        ### 各インターフェースのメディアタイプを格納したディクショナリを作る(後で使う)
+        media_dict = {}
+        mediainfo = self.run("display interface transceiver")
+        mediainfo_list = mediainfo.split("\r\n\r\n")
+
+        for i in mediainfo_list:
+            interface_name = i.split()[0]
+            for line in i.split("\n"):
+                if "Transceiver Type" in line:
+                    media = line.split(":")[1].replace("\r", "").strip()
+                    media_dict[interface_name] = media
+
         ### インターフェース1つ毎に、name, admin_state, link_state, speed, description, lag_group, lag_member を key とするディクショナリを作る
         ### それらを interfaces 配列に格納していく
         interfaces = []
@@ -139,13 +151,19 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
                 lag_member = [i.split()[0] for i in member_row_list]
                 interface_dict["lag_member"] = lag_member
 
+            ### メディアタイプを決める
+            try:
+                interface_dict["media_type"] = media_dict[interface_dict["name"]]
+            except:
+                pass
+
             ### これまでの処理で、必要な key に値が入らなかった部分を "-" で埋める
-            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member"]
+            keys = ["name", "admin_state", "link_state", "speed", "description", "lag_group", "lag_member", "media_type"]
             key_diff = list(set(keys) - set(interface_dict.keys()))
             for key in key_diff:
                 interface_dict[key] = "-" 
 
-            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"]))
+            interfaces.append(interfaceinfo(interface_dict["name"], interface_dict["admin_state"], interface_dict["link_state"], interface_dict["speed"], interface_dict["description"], interface_dict["lag_group"], interface_dict["lag_member"], interface_dict["media_type"]))
 
         return interfaces
 

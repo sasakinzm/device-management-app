@@ -85,8 +85,8 @@ while ($row = mysql_fetch_assoc($result)) {
     print("<td>".$row['serial']."</td>");
     print("<td>".$row['version']."</td>");
     print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['mgmt_ip']."</a></td>");
-    print("<td> <a href='interface_list.html?keyword_hostname=".$row['name']."&match_condition=exact' targt='contents'>IF一覧</a></td>");
-    print("<td> <a href='bgppeer_list.html?keyword_hostname=".$row['name']."&match_condition=exact' targt='contents'>BGPピア一覧</a></td>");
+    print("<td> <a href='subframe_jump_node2interface.html?keyword_hostname=".$row['name']."' target='subframe'>IF一覧</a></td>");
+    print("<td> <a href='subframe_jump_node2bgppeer.html?keyword_hostname=".$row['name']."' target='subframe'>BGPピア一覧</a></td>");
     print("</tr>");
 }
 

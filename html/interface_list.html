@@ -32,22 +32,7 @@ $password = $config["device"]["password"];
 $domain = $config["env"]["domain"];
 
 
-### MYSQL接続、表作成
-print("<h1> Interface List </h1>");
-print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description $keyword_media_type");
-
-print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
-print("<tr>");
-print("<td> ホスト名 </td>");
-print("<td> インターフェース </td>");
-print("<td> Adminステート </td>");
-print("<td> リンク状態 </td>");
-print("<td> 帯域幅 </td>");
-print("<td> メディアタイプ </td>");
-print("<td> LAGグループ </td>");
-print("<td> Description </td>");
-print("</tr>");
-
+### MYSQL接続、クエリ実行
 $link = mysql_connect($db_host, $db_user, $db_pass);
 if (!$link) {
     die('接続失敗です。'.mysql_error());
@@ -95,6 +80,24 @@ if (!$result) {
     die('クエリーが失敗しました。'.mysql_error());
 }
 
+
+### HTML作成
+print("<h1> Interface List </h1>");
+print("行数: ".mysql_num_rows($result)."<br/>");
+print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description $keyword_media_type");
+
+print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<tr>");
+print("<td> ホスト名 </td>");
+print("<td> インターフェース </td>");
+print("<td> Adminステート </td>");
+print("<td> リンク状態 </td>");
+print("<td> 帯域幅 </td>");
+print("<td> メディアタイプ </td>");
+print("<td> LAGグループ </td>");
+print("<td> Description </td>");
+print("</tr>");
+
 while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
     print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
@@ -109,7 +112,6 @@ while ($row = mysql_fetch_assoc($result)) {
 }
 
 print("</table>");
-print("行数: ".mysql_num_rows($result));
 
 $close_flag = mysql_close($link);
 

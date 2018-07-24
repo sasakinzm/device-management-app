@@ -76,6 +76,7 @@ if (!$result) {
 
 ### HTML作成
 print("<h1> BGP Peer List </h1>");
+print("行数: ".mysql_num_rows($result)."<br/>");
 print("検索キーワード: $keyword_hostname $keyword_peer_address $keyword_peer_type $keyword_state $keyword_asn $keyword_peer_description");
 
 print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
@@ -102,9 +103,6 @@ while ($row = mysql_fetch_assoc($result)) {
     print("<td>".$row['peer_description']."</td>");
     print("</tr>");
 }
-
-print("</table>");
-print("行数: ".mysql_num_rows($result));
 
 $close_flag = mysql_close($link);
 

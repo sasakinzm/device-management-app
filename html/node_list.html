@@ -63,6 +63,7 @@ if (!$result) {
 
 ### HTML作成
 print("<h1> Device List </h1>");
+print("行数: ".mysql_num_rows($result)."<br/>");
 print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_type $keyword_os_version $keyword_mgmt_ip");
 
 print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
@@ -76,6 +77,7 @@ print("<td> OSバージョン </td>");
 print("<td> 管理IPアドレス </td>");
 print("</tr>");
 
+
 while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
     print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['name']."</a></td>");
@@ -85,14 +87,12 @@ while ($row = mysql_fetch_assoc($result)) {
     print("<td>".$row['serial']."</td>");
     print("<td>".$row['version']."</td>");
     print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['mgmt_ip']."</a></td>");
-    print("<td> <a href='subframe_jump_node2interface.html?keyword_hostname=".$row['name']."' target='subframe'>IF一覧</a></td>");
-    print("<td> <a href='subframe_jump_node2bgppeer.html?keyword_hostname=".$row['name']."' target='subframe'>BGPピア一覧</a></td>");
+    print("<td><a href='subframe_jump_node2interface.html?keyword_hostname=".$row['name']."' target='subframe'>IF一覧</a></td>");
+    print("<td><a href='subframe_jump_node2bgppeer.html?keyword_hostname=".$row['name']."' target='subframe'>BGPピア一覧</a></td>");
     print("</tr>");
 }
 
 print("</table>");
-print("行数: ".mysql_num_rows($result));
-
 
 $close_flag = mysql_close($link);
 

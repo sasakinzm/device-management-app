@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.address-1.4.min.js"></script>
+<script type="text/javascript" src="js/arbor.js"></script>
+<script type="text/javascript" src="js/arbor-tween.js"></script>
+<script type="text/javascript" src="js/graphics.js"></script>
+<title>Peering Topology</title>
+</head>
+<body>
+<h1>Peering Topology</h1>
+<canvas id="viewport" width="2000" height="1000"></canvas>
+<br/>
+
+<?php
+
+### コンフィグ読み込み
+$config = parse_ini_file("../cgi-bin/scripts/config.txt", true);
+$db_user = $config["database"]["username"];
+$db_pass = $config["database"]["password"];
+$db_name = $config["database"]["database"];
+$db_host = $config["database"]["host"];
+
+
+### MYSQL接続、クエリ実行
+$link = mysql_connect($db_host, $db_user, $db_pass);
+$db_selected = mysql_select_db('device_management', $link);
+mysql_set_charset('utf8');
+
+$result_node = mysql_query("SELECT
+                              name
+                            FROM
+                              node_list where name = 'ote-gw4' ### ココのWhere句をいじって、中心ノードを絞れる？
+                            ORDER BY name
+                           ");
+
+### 中心ノードを key, ピアのリストを値とした多重配列を作成する
+$peerinfo = array();
+while ($row_node = mysql_fetch_assoc($result_node)) {
+    $result_peer = mysql_query("SELECT * FROM bgppeer_list where hostname ='".$row_node['name']."'");
+    $peers = array();
+    while ($row_peer = mysql_fetch_assoc($result_peer)) {
+        $result_as = mysql_query("SELECT * FROM as_list where asn = ".$row_peer["asn"]);
+        $as_name = mysql_fetch_assoc($result_as);
+        array_push($peers, $row_peer["asn"]." ".$as_name["as_name"]);    ### ココの$row_peerの中身を書き換えたらアドレスとかAS番号とか変えられる
+    }
+    if (empty($peers)) {
+        continue;
+    }
+    $peerinfo += array(str_replace("-", "", $row_node["name"]) => $peers);
+}
+
+$varJsPeerinfo = json_encode($peerinfo);
+
+?>
+
+<!-- 多重配列 $peerinfo をjavascriptに渡す -->
+<script type="text/javascript">
+var peerinfo=JSON.parse('<?php echo $varJsPeerinfo; ?>');
+</script>
+
+<script type="text/javascript" src="js/generate_peering_topology.js"></script>
+
+</body>
+</html>
+

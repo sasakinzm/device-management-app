@@ -35,7 +35,7 @@
           ctx.stroke()
         })
 
-        // drau node box
+        // draw node box
         var nodeBoxes = {}
         particleSystem.eachNode(function(node, pt){
           var label = node.name||""
@@ -66,7 +66,7 @@
 
           // draw the text
           if (label){
-            ctx.font = "20px Helvetica"
+            ctx.font = "15px Helvetica"
             ctx.textAlign = "center"
             ctx.fillStyle = "white"
             if (node.data.color=='none') ctx.fillStyle = '#333333'
@@ -125,23 +125,22 @@
     return that
   }
 
-
-
   $(document).ready(function(){
     var sys = arbor.ParticleSystem(1000, 60, 0.5)
     sys.parameters({gravity:true})
     sys.renderer = Renderer("#viewport")
     for (node in peerinfo) {
       for (let peer in peerinfo[node]) {
+        if (peerinfo[node][peer].match(/ote/)) {
+          sys.addNode(peerinfo[node][peer], {who:"node"});
+        }
+        else {
+          sys.addNode(peerinfo[node][peer],{who:"peer"});
+        }
         sys.addNode(node,{who:"node"});
-        sys.addNode(peerinfo[node][peer],{who:"peer"});
         sys.addEdge(node, peerinfo[node][peer])
       }
     }
   })
 
-
-
-
 })(this.jQuery)
-

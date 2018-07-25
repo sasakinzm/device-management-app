@@ -8,15 +8,23 @@
 <script type="text/javascript" src="js/arbor-tween.js"></script>
 <script type="text/javascript" src="js/graphics.js"></script>
 <title>Peering Topology</title>
+<style type="text/css">
+#test {
+  width: 1800px;
+  height: 750px;
+  margin: 0px auto;
+}
+</style>
 </head>
 <body>
+
 <h1>Peering Topology</h1>
-<canvas id="viewport" width="2000" height="1000"></canvas>
-<br/>
+<font size="2">
+è¡¨ç¤ºæ–¹å¼ã¨è¡¨ç¤ºã—ãŸã„ãƒãƒ¼ãƒ‰ã‚’ãƒã‚§ãƒƒã‚¯ (â€»è¡¨ç¤ºãŒå¤šã„ã¨æ¥µç«¯ã«é‡ããªã‚‹ã®ã§æ³¨æ„)</font>
 
 <?php
 
-### ƒRƒ“ƒtƒBƒO“Ç‚İ‚İ
+### ã‚³ãƒ³ãƒ•ã‚£ã‚°èª­ã¿è¾¼ã¿
 $config = parse_ini_file("../cgi-bin/scripts/config.txt", true);
 $db_user = $config["database"]["username"];
 $db_pass = $config["database"]["password"];
@@ -24,19 +32,50 @@ $db_name = $config["database"]["database"];
 $db_host = $config["database"]["host"];
 
 
-### MYSQLÚ‘±AƒNƒGƒŠÀs
+### ãƒ•ã‚©ãƒ¼ãƒ ãƒ‡ãƒ¼ã‚¿ã®å¤‰æ•°åŒ– 
+error_reporting(E_ALL & ~ E_NOTICE);
+$nodes = $_GET['node'];
+$display = $_GET['display'];
+
+
+### MYSQLæ¥ç¶šã€DBé¸æŠ
 $link = mysql_connect($db_host, $db_user, $db_pass);
 $db_selected = mysql_select_db('device_management', $link);
 mysql_set_charset('utf8');
 
-$result_node = mysql_query("SELECT
-                              name
-                            FROM
-                              node_list where name = 'ote-gw4' ### ƒRƒR‚ÌWhere‹å‚ğ‚¢‚¶‚Á‚ÄA’†Sƒm[ƒh‚ği‚ê‚éH
-                            ORDER BY name
-                           ");
 
-### ’†Sƒm[ƒh‚ğ key, ƒsƒA‚ÌƒŠƒXƒg‚ğ’l‚Æ‚µ‚½‘½d”z—ñ‚ğì¬‚·‚é
+### ãƒ•ã‚©ãƒ¼ãƒ ä½œæˆ
+## ãƒ«ãƒ¼ãƒ—å‡¦ç†ã§ãƒ•ã‚©ãƒ¼ãƒ ãƒ‡ãƒ¼ã‚¿ã‚’ä½œã‚‹ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã‚’ä½œã‚‹
+$result = mysql_query("SELECT * FROM node_master_list ORDER BY name");
+print("<font size='2'>");
+print("<form action='peering_topology.html' method='get'>");
+print("<input type='radio' name='display' value='asn' checked>ASç•ªå·");
+print("<input type='radio' name='display' value='address'>ãƒ”ã‚¢ã‚¢ãƒ‰ãƒ¬ã‚¹");
+print("<p>");
+while ($row = mysql_fetch_assoc($result)) {
+    print("<input type='checkbox' name='node[]' value=".$row["name"].">".$row["name"]);
+}
+print("</p>");
+print("<p>");
+print("<input type='submit' value='è¡¨ç¤º'>");
+print(" é¸æŠãƒãƒ¼ãƒ‰: ");
+foreach ($nodes as $node) {
+    print($node.", ");
+}
+print("</p>");
+print("</form>");
+print("</font>");
+
+### ãƒˆãƒãƒ­ã‚¸ãƒ¼ä½œæˆç”¨ã‚¯ã‚¨ãƒªå®Ÿè¡Œ
+#ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã«å¿œã˜ãŸwhereå¥ã‚’ä½œã‚‹
+$where_clause = "WHERE name = ''";
+foreach ($nodes as $node) {
+    $where_clause = $where_clause."or name = '".$node."' ";
+}
+$result_node = mysql_query("SELECT name FROM node_list ".$where_clause." ORDER BY name");
+
+
+### ä¸­å¿ƒãƒãƒ¼ãƒ‰ã‚’ key, ãƒ”ã‚¢ã®ãƒªã‚¹ãƒˆã‚’å€¤ã¨ã—ãŸå¤šé‡é…åˆ—ã‚’ä½œæˆã™ã‚‹
 $peerinfo = array();
 while ($row_node = mysql_fetch_assoc($result_node)) {
     $result_peer = mysql_query("SELECT * FROM bgppeer_list where hostname ='".$row_node['name']."'");
@@ -44,7 +83,23 @@ while ($row_node = mysql_fetch_assoc($result_node)) {
     while ($row_peer = mysql_fetch_assoc($result_peer)) {
         $result_as = mysql_query("SELECT * FROM as_list where asn = ".$row_peer["asn"]);
         $as_name = mysql_fetch_assoc($result_as);
-        array_push($peers, $row_peer["asn"]." ".$as_name["as_name"]);    ### ƒRƒR‚Ì$row_peer‚Ì’†g‚ğ‘‚«Š·‚¦‚½‚çƒAƒhƒŒƒX‚Æ‚©AS”Ô†‚Æ‚©•Ï‚¦‚ç‚ê‚é
+        
+        ### ãƒ©ãƒ‚ã‚ªãƒœãƒƒã‚¯ã‚¹ã®å€¤ãŒASç•ªå·ã‹ãƒ”ã‚¢ã‚¢ãƒ‰ãƒ¬ã‚¹ã‹ã§åˆ†å²
+        if ($display == "asn") {
+            array_push($peers, "AS".$row_peer["asn"]." ".$as_name["as_name"]);
+        } elseif ($display == "address") {
+            $peer_address = $row_peer["peer_address"];
+            
+            ### ãƒ”ã‚¢ãŒnode_listã«å­˜åœ¨ã™ã‚‹æ©Ÿå™¨ã§ã‚ã‚‹ãªã‚‰ã°ã€ã‚¢ãƒ‰ãƒ¬ã‚¹åã‚’æ©Ÿå™¨ã®åå‰ã«å…¥ã‚Œæ›¿ãˆã‚‹
+            $result_check = mysql_query("select * from node_list where mgmt_ip = '".$peer_address."'");
+            $row_check = mysql_fetch_assoc($result_check);
+            if ($row_check != array()){
+                $peer_address = $row_check["name"];
+                array_push($peers, str_replace("-", "", $peer_address));
+            } else {
+                array_push($peers, $row_peer["peer_address"]." ".$as_name["as_name"]);
+            }
+        }
     }
     if (empty($peers)) {
         continue;
@@ -55,8 +110,11 @@ while ($row_node = mysql_fetch_assoc($result_node)) {
 $varJsPeerinfo = json_encode($peerinfo);
 
 ?>
+<div id="test">
+<canvas id="viewport" width="1800px" height="750px"></canvas>
+</div>
 
-<!-- ‘½d”z—ñ $peerinfo ‚ğjavascript‚É“n‚· -->
+<!-- ä½œæˆã—ãŸå¤šé‡é…åˆ— $peerinfo ã‚’javascriptã«æ¸¡ã™ -->
 <script type="text/javascript">
 var peerinfo=JSON.parse('<?php echo $varJsPeerinfo; ?>');
 </script>

@@ -83,6 +83,7 @@ for dct in node_list:
             received_route_num = peer.rcvroutes
             advertise_route_num = peer.advroutes
             peer_description = peer.peer_description
+            peer_description = peer_description.replace('"', '')
 
             sql_insert_bgppeer_list = '''
                                         INSERT

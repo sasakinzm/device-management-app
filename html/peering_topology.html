@@ -10,17 +10,15 @@
 <title>Peering Topology</title>
 <style type="text/css">
 #test {
-  width: 1800px;
-  height: 750px;
+  width: 1200px;
+  height: 700px;
   margin: 0px auto;
 }
 </style>
 </head>
 <body>
 
-<h1>Peering Topology</h1>
-<font size="2">
-表示方式と表示したいノードをチェック (※表示が多いと極端に重くなるので注意)</font>
+<h1> Peering Topology</h1>
 
 <?php
 
@@ -44,27 +42,14 @@ $db_selected = mysql_select_db('device_management', $link);
 mysql_set_charset('utf8');
 
 
-### フォーム作成
-## ループ処理でフォームデータを作るチェックボックスを作る
-$result = mysql_query("SELECT * FROM node_master_list ORDER BY name");
+### 選択ノード表示
 print("<font size='2'>");
-print("<form action='peering_topology.html' method='get'>");
-print("<input type='radio' name='display' value='asn' checked>AS番号");
-print("<input type='radio' name='display' value='address'>ピアアドレス");
-print("<p>");
-while ($row = mysql_fetch_assoc($result)) {
-    print("<input type='checkbox' name='node[]' value=".$row["name"].">".$row["name"]);
-}
-print("</p>");
-print("<p>");
-print("<input type='submit' value='表示'>");
 print(" 選択ノード: ");
 foreach ($nodes as $node) {
     print($node.", ");
 }
-print("</p>");
-print("</form>");
 print("</font>");
+
 
 ### トポロジー作成用クエリ実行
 #チェックボックスに応じたwhere句を作る
@@ -111,7 +96,7 @@ $varJsPeerinfo = json_encode($peerinfo);
 
 ?>
 <div id="test">
-<canvas id="viewport" width="1800px" height="750px"></canvas>
+<canvas id="viewport" width="1200px" height="700px"></canvas>
 </div>
 
 <!-- 作成した多重配列 $peerinfo をjavascriptに渡す -->

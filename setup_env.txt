@@ -9,5 +9,44 @@ sudo yum install libxslt1-dev
 sudo pip3 install ncclient
 sudo pip3 install mysql-connector-python
 
-
-
+create database device_management
+create table as_list (
+  asn varchar(10)
+, as_name varchar(500)
+)
+create table bgppeer_list (
+  hostname varchar(30)
+, peer_address varchar(15)
+, peer_type varchar(10)
+, state varchar(20)
+, asn varchar(10)
+, received_route_num varchar(10)
+, advertise_route_num varchar(10)
+, peer_description varchar(250)
+)
+create table interface_list (
+  hostname varchar(30)
+, interface_name varchar(50)
+, admin_state varchar(10)
+, link_state varchar(10)
+, bandwidth varchar(20)
+, lag_group varchar(50
+, lag_member varchar(500)
+, description varchar(250)
+, media_type varchar(50)
+)
+create table node_list (
+  name varchar(30)
+, location varchar(50)
+, model varchar(30)
+, type varchar(15)
+, serial varchar(100)
+, version varchar(100)
+, mgmt_ip varchar(15)
+)
+create table node_master_list (
+  name varchar(30)
+, location varchar(50)
+, type varchar(15)
+, mgmt_ip varchar(15)
+)

@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>Search Form for interface list</title>
+</head>
+<body>
+
+<h1> 表示ノード選択 </h1>
+<font size="2">
+表示方式と表示したいノードをチェック <br>
+(※表示が多いとCPUwを大量に使用するので注意)</font>
+<hr>
+
+<form action = 'peering_topology.html' method = 'get' target = 'contents'>
+
+<?php
+
+### コンフィグ読み込み
+$config = parse_ini_file("../cgi-bin/scripts/config.txt", true);
+$db_user = $config["database"]["username"];
+$db_pass = $config["database"]["password"];
+$db_name = $config["database"]["database"];
+$db_host = $config["database"]["host"];
+
+
+### MYSQL接続、DB選択
+$link = mysql_connect($db_host, $db_user, $db_pass);
+$db_selected = mysql_select_db('device_management', $link);
+mysql_set_charset('utf8');
+
+
+### フォーム作成
+## ループ処理でフォームデータを作るチェックボックスを作る
+$result = mysql_query("SELECT * FROM node_master_list ORDER BY name");
+print("<font size='2'>");
+print("<form action='peering_topology.html' method='get'>");
+print("<input type='radio' name='display' value='asn' checked>AS番号");
+print("<input type='radio' name='display' value='address'>ピアアドレス");
+print("<p>");
+print("<table boader='0' style='font-size:10px; border-collapse:collapse; border-spacing:0;'>");
+while ($row = mysql_fetch_assoc($result)) {
+    $i = 0;
+    print("<tr>");
+    while( $i < 4) {
+        print("<td><input type='checkbox' name='node[]' value=".$row["name"].">".$row["name"]."</td>");
+        $i += 1;
+    }
+    print("</tr>");
+}
+print("</table>");
+print("</p>");
+print("<p>");
+print("<input type='submit' value='表示'> ");
+print("<input type='reset' value='選択解除'>");
+print("</p>");
+print("</form>");
+print("</font>");
+
+?>
+
+</body>
+</html>

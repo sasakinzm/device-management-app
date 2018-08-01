@@ -108,7 +108,7 @@ class session_create_nxos(interfaceinfo):
                         if "BW" in i:
                             interface_dict["speed"] = i.replace("BW", "").strip()
                 if "Description:" in row:
-                    interface_dict["description"] = row.replace("Description:", "").strip()
+                    interface_dict["description"] = row.replace("Description:", "").replace("\r", "").strip()
                 if "Belongs to" in row:
                     interface_dict["lag_group"] = row.replace("Belongs to", "").strip()
                 if "Members in this channel:" in row:

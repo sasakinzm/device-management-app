@@ -147,7 +147,7 @@ class session_create_junos(interfaceinfo):
                         if "Speed:" in i:
                             interface_dict["speed"] = i.strip().replace("Speed: ", "")
                 if "Description: " in row:
-                    interface_dict["description"] = row.replace("Description: ", "")
+                    interface_dict["description"] = row.replace("Description: ", "").replace("\r", "")
                 if "AE bundle: " in row:
                     interface_dict["lag_group"] = row.split(",")[1].replace("AE bundle: ", "").strip()
 

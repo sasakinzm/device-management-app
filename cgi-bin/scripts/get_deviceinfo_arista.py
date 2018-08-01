@@ -104,7 +104,7 @@ class session_create_arista(interfaceinfo):
                         if "BW" in i:
                             interface_dict["speed"] = i.replace("BW ", "").strip()
                 if "Description: " in row:
-                    interface_dict["description"] = row.replace("Description: ", "").strip()
+                    interface_dict["description"] = row.replace("Description: ", "").replace("\r", "").strip()
                 if "Member of Port-Channel" in row:
                     for i in row.split():
                         if "Port-Channel" in i:

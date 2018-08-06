@@ -18,7 +18,7 @@ $keyword_lag_group = $_GET['keyword_lag_group'];
 $keyword_lag_member = $_GET['keyword_lag_member'];
 $keyword_description = $_GET['keyword_description'];
 $keyword_media_type = $_GET['keyword_media_type'];
-$match_condition = $_GET['match_condition'];
+$any_query = $_GET['any_query'];
 
 
 ### コンフィグ読み込み
@@ -32,7 +32,7 @@ $password = $config["device"]["password"];
 $domain = $config["env"]["domain"];
 
 
-### MYSQL接続、クエリ実行
+### MYSQL接続
 $link = mysql_connect($db_host, $db_user, $db_pass);
 if (!$link) {
     die('接続失敗です。'.mysql_error());
@@ -42,38 +42,42 @@ $db_selected = mysql_select_db('device_management', $link);
 if (!$db_selected){
     die('データベース選択失敗です。'.mysql_error());
 }
-
 mysql_set_charset('utf8');
 
-$result = mysql_query("SELECT * FROM interface_list ORDER BY name");
+### クエリ作成、実行
+if ($keyword_hostname or $keyword_interface_name or $keyword_admin_state or $keyword_link_state or $keyword_bandwidth or $keyword_lag_group or $keyword_description or $keyword_media_type ) {
+    # WHERE句作成
+    $where = "WHERE";
+    if ($keyword_hostname) {
+        $where .= " hostname LIKE '{$keyword_hostname}' AND";
+    }
+    if ($keyword_interface_name) {
+        $where .= " interface_name LIKE '{$keyword_interface_name}' AND";
+    }
+    if ($keyword_admin_state) {
+        $where .= " admin_state LIKE '{$keyword_admin_state}' AND";
+    }
+    if ($keyword_link_state) {
+        $where .= " link_state LIKE '{$keyword_link_state}' AND";
+    }
+    if ($keyword_bandwidth) {
+        $where .= " bandwidth LIKE '{$keyword_bandwidth}' AND";
+    }
+    if ($keyword_lag_group) {
+        $where .= " lag_group LIKE '{$keyword_lag_group}' AND";
+    }
+    if ($keyword_description) {
+        $where .= " description LIKE '{$keyword_description}' AND";
+    }
+    if ($keyword_media_type) {
+        $where .= " media_type LIKE '{$keyword_media_type}' AND";
+    }
+    $where = rtrim($where, "AND");
 
-
-
-if ($match_condition == "exact") {
-    $result = mysql_query("SELECT
-                               *
-                           FROM
-                               interface_list
-                           WHERE
-                               hostname = '{$keyword_hostname}'
-                           ORDER BY hostname
-                         ");
+    # クエリ作成
+    $result = mysql_query("SELECT * FROM interface_list ".$where." ORDER BY hostname");
 } else {
-    $result = mysql_query("SELECT
-                               *
-                           FROM
-                               interface_list
-                           WHERE
-                               hostname LIKE '%{$keyword_hostname}%'
-                           AND interface_name LIKE '%{$keyword_interface_name}%'
-                           AND admin_state LIKE '%{$keyword_admin_state}%'
-                           AND link_state LIKE '%{$keyword_link_state}%'
-                           AND bandwidth LIKE '%{$keyword_bandwidth}%'
-                           AND lag_group LIKE '%{$keyword_lag_group}%'
-                           AND description LIKE '%{$keyword_description}%'
-                           AND media_type LIKE '%{$keyword_media_type}%'
-                           ORDER BY hostname
-                         ");
+    $result = mysql_query("SELECT * FROM interface_list ORDER BY hostname");
 }
 
 if (!$result) {
@@ -84,34 +88,44 @@ if (!$result) {
 ### HTML作成
 print("<h1> Interface List </h1>");
 print("行数: ".mysql_num_rows($result)."<br/>");
-print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description $keyword_media_type");
+print("検索キーワード: $keyword_hostname $keyword_ifname $keyword_admin_state $keyword_link_state $keyword_bandwidth $keyword_lag_group $keyword_lag_member $keyword_description $keyword_media_type <br>");
 
-print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
-print("<tr>");
-print("<td> ホスト名 </td>");
-print("<td> インターフェース </td>");
-print("<td> Adminステート </td>");
-print("<td> リンク状態 </td>");
-print("<td> 帯域幅 </td>");
-print("<td> メディアタイプ </td>");
-print("<td> LAGグループ </td>");
-print("<td> Description </td>");
-print("</tr>");
-
-while ($row = mysql_fetch_assoc($result)) {
+# "任意のクエリ"が実行されたとき
+if ($any_query) {
+    $result_any = mysql_query($any_query);
+    while ($row = mysql_fetch_assoc($result_any)) {
+        foreach ($row as $item) {
+            print($item.", ");
+        }
+    }
+} else {
+# "任意のクエリ"が実行されていないとき(普通の時)
+    print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
     print("<tr>");
-    print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
-    print("<td>".$row['interface_name']."</td>");
-    print("<td>".$row['admin_state']."</td>");
-    print("<td>".$row['link_state']."</td>");
-    print("<td>".$row['bandwidth']."</td>");
-    print("<td>".$row['media_type']."</td>");
-    print("<td>".$row['lag_group']."</td>");
-    print("<td>".$row['description']."</td>");
+    print("<td> ホスト名 </td>");
+    print("<td> インターフェース </td>");
+    print("<td> Adminステート </td>");
+    print("<td> リンク状態 </td>");
+    print("<td> 帯域幅 </td>");
+    print("<td> メディアタイプ </td>");
+    print("<td> LAGグループ </td>");
+    print("<td> Description </td>");
     print("</tr>");
+    
+    while ($row = mysql_fetch_assoc($result)) {
+        print("<tr>");
+        print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
+        print("<td>".$row['interface_name']."</td>");
+        print("<td>".$row['admin_state']."</td>");
+        print("<td>".$row['link_state']."</td>");
+        print("<td>".$row['bandwidth']."</td>");
+        print("<td>".$row['media_type']."</td>");
+        print("<td>".$row['lag_group']."</td>");
+        print("<td>".$row['description']."</td>");
+        print("</tr>");
+    }
+    print("</table>");
 }
-
-print("</table>");
 
 $close_flag = mysql_close($link);
 

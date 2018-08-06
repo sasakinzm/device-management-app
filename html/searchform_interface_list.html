@@ -51,8 +51,11 @@ print("<td> <input type = 'text' name = 'keyword_description'> </td>");
 print("</tr>");
 print("</table>");
 
-print("キーワードは部分一致検索 <br/>");
-print("複数条件入力時はAND検索 <br/>");
+print("<p>キーワードは完全一致検索(正規表現対応) <br>");
+print("複数条件入力時はAND検索 </p>");
+
+print("<p>任意のクエリ実行 <br>");
+print("<input size='40' type = 'text' name = 'any_query'></p>");
 
 print("<input type = 'submit' value = '検索'>");
 print("</form>");

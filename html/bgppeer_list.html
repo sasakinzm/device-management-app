@@ -16,6 +16,7 @@ $keyword_state = $_GET['keyword_state'];
 $keyword_asn = $_GET['keyword_asn'];
 $keyword_peer_description = $_GET['keyword_peer_description'];
 $match_condition = $_GET['match_condition'];
+$any_query = $_GET['any_query'];
 
 
 ### コンフィグ読み込み
@@ -42,31 +43,34 @@ if (!$db_selected){
 
 mysql_set_charset('utf8');
 
-$result = mysql_query("SELECT * FROM bgppeer_list ORDER BY hostname");
+### クエリ作成、実行
+if ($keyword_hostname or $keyword_peer_address or $keyword_peer_type or $keyword_state or $keyword_asn or $keyword_peer_description ) {
+    # WHERE句作成
+    $where = "WHERE";
+    if ($keyword_hostname) {
+        $where .= " hostname LIKE '{$keyword_hostname}' AND";
+    }
+    if ($keyword_peer_address) {
+        $where .= " peer_address LIKE '{$keyword_peer_address}' AND";
+    }
+    if ($keyword_peer_type) {
+        $where .= " peer_type LIKE '{$keyword_peer_type}' AND";
+    }
+    if ($keyword_state) {
+        $where .= " state LIKE '{$keyword_state}' AND";
+    }
+    if ($keyword_asn) {
+        $where .= " asn LIKE '{$keyword_asn}' AND";
+    }
+    if ($keyword_peer_description) {
+        $where .= " peer_description LIKE '{$keyword_peer_description}' AND";
+    }
+    $where = rtrim($where, "AND");
 
-if ($match_condition == "exact") {
-    $result = mysql_query("SELECT
-                               *
-                           FROM
-                               bgppeer_list
-                           WHERE
-                               hostname = '{$keyword_hostname}'
-                           ORDER BY hostname
-                         ");
+    # クエリ作成
+    $result = mysql_query("SELECT * FROM bgppeer_list ".$where." ORDER BY hostname");
 } else {
-    $result = mysql_query("SELECT
-                               *
-                           FROM
-                               bgppeer_list
-                           WHERE
-                               hostname LIKE '%{$keyword_hostname}%'
-                           AND peer_address LIKE '%{$keyword_peer_address}%'
-                           AND peer_type LIKE '%{$keyword_peer_type}%'
-                           AND state LIKE '%{$keyword_state}%'
-                           AND asn LIKE '%{$keyword_asn}%'
-                           AND peer_description LIKE '%{$keyword_peer_description}%'
-                           ORDER BY hostname
-                         ");
+    $result = mysql_query("SELECT * FROM bgppeer_list ORDER BY hostname");
 }
 
 if (!$result) {
@@ -77,31 +81,42 @@ if (!$result) {
 ### HTML作成
 print("<h1> BGP Peer List </h1>");
 print("行数: ".mysql_num_rows($result)."<br/>");
-print("検索キーワード: $keyword_hostname $keyword_peer_address $keyword_peer_type $keyword_state $keyword_asn $keyword_peer_description");
+print("検索キーワード: $keyword_hostname $keyword_peer_address $keyword_peer_type $keyword_state $keyword_asn $keyword_peer_description <br>");
 
-print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
-print("<tr>");
-print("<td> ホスト名 </td>");
-print("<td> ピアアドレス </td>");
-print("<td> タイプ </td>");
-print("<td> ピア状態 </td>");
-print("<td> AS番号 </td>");
-print("<td> 受信経路数 </td>");
-print("<td> 広報経路数 </td>");
-print("<td> Description </td>");
-print("</tr>");
-
-while ($row = mysql_fetch_assoc($result)) {
+# "任意のクエリ"が実行されたとき
+if ($any_query) {
+    $result_any = mysql_query($any_query);
+    while ($row = mysql_fetch_assoc($result_any)) {
+        foreach ($row as $item) {
+            print($item.", ");
+        }
+    }
+} else {
+# "任意のクエリ"が実行されていないとき(普通の時)
+    print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
     print("<tr>");
-    print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
-    print("<td>".$row['peer_address']."</td>");
-    print("<td>".$row['peer_type']."</td>");
-    print("<td>".$row['state']."</td>");
-    print("<td><a href='https://www.peeringdb.com/net?asn=".$row['asn']."' target='_blank'>".$row['asn']."</a></td>");
-    print("<td>".$row['received_route_num']."</td>");
-    print("<td>".$row['advertise_route_num']."</td>");
-    print("<td>".$row['peer_description']."</td>");
+    print("<td> ホスト名 </td>");
+    print("<td> ピアアドレス </td>");
+    print("<td> タイプ </td>");
+    print("<td> ピア状態 </td>");
+    print("<td> AS番号 </td>");
+    print("<td> 受信経路数 </td>");
+    print("<td> 広報経路数 </td>");
+    print("<td> Description </td>");
     print("</tr>");
+    
+    while ($row = mysql_fetch_assoc($result)) {
+        print("<tr>");
+        print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
+        print("<td>".$row['peer_address']."</td>");
+        print("<td>".$row['peer_type']."</td>");
+        print("<td>".$row['state']."</td>");
+        print("<td><a href='https://www.peeringdb.com/net?asn=".$row['asn']."' target='_blank'>".$row['asn']."</a></td>");
+        print("<td>".$row['received_route_num']."</td>");
+        print("<td>".$row['advertise_route_num']."</td>");
+        print("<td>".$row['peer_description']."</td>");
+    print("</tr>");
+    }
 }
 
 $close_flag = mysql_close($link);

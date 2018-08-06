@@ -15,7 +15,6 @@ $keyword_model = $_GET['keyword_model'];
 $keyword_type = $_GET['keyword_type'];
 $keyword_os_version = $_GET['keyword_os_version'];
 $keyword_mgmt_ip = $_GET['keyword_mgmt_ip'];
-$match_condition = $_GET['match_condition'];
 
 
 ### コンフィグ読み込み
@@ -29,7 +28,7 @@ $password = $config["device"]["password"];
 $domain = $config["env"]["domain"];
 
 
-### MYSQL接続、クエリ実行
+### MYSQL接続
 $link = mysql_connect($db_host, $db_user, $db_pass);
 if (!$link) {
     die('接続失敗です。'.mysql_error());
@@ -39,22 +38,38 @@ $db_selected = mysql_select_db('device_management', $link);
 if (!$db_selected){
     die('データベース選択失敗です。'.mysql_error());
 }
-
 mysql_set_charset('utf8');
 
-$result = mysql_query("SELECT
-                           *
-                       FROM
-                           node_list
-                       WHERE
-                           name LIKE '%{$keyword_host}%'
-                       AND location LIKE '%{$keyword_location}%'
-                       AND model LIKE '%{$keyword_model}%'
-                       AND type LIKE '%{$keyword_type}%'
-                       AND version LIKE '%{$keyword_os_version}%'
-                       AND mgmt_ip LIKE '%{$keyword_mgmt_ip}%'
-                       ORDER BY name
-                      ");
+
+### クエリ作成、実行
+if ($keyword_host or $keyword_location or $keyword_model or $keyword_type or $keyword_os_version or $keyword_mgmt_ip) {
+    # WHERE句作成
+    $where = "WHERE";
+    if ($keyword_host) {
+        $where .= " name LIKE '{$keyword_host}' AND";
+    }
+    if ($keyword_location) {
+        $where .= " location LIKE '{$keyword_location}' AND";
+    }
+    if ($keyword_model) {
+        $where .= " model LIKE '{$keyword_model}' AND";
+    }
+    if ($keyword_type) {
+        $where .= " type LIKE '{$keyword_type}' AND";
+    }
+    if ($keyword_os_version) {
+        $where .= " version LIKE '{$keyword_os_version}' AND";
+    }
+    if ($keyword_mgmt_ip) {
+        $where .= " mgmt_ip LIKE '{$keyword_mgmt_ip}' AND";
+    }
+    $where = rtrim($where, "AND");
+
+    # クエリ作成
+    $result = mysql_query("SELECT * FROM node_list ".$where." ORDER BY name");
+} else {
+    $result = mysql_query("SELECT * FROM node_list ORDER BY name");
+}
 
 if (!$result) {
     die('クエリーが失敗しました。'.mysql_error());
@@ -63,7 +78,7 @@ if (!$result) {
 
 ### HTML作成
 print("<h1> Device List </h1>");
-print("行数: ".mysql_num_rows($result)."<br/>");
+print("行数: ".mysql_num_rows($result)."<br>");
 print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_type $keyword_os_version $keyword_mgmt_ip");
 
 print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");

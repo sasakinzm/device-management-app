@@ -36,6 +36,12 @@ class session_create_arista(interfaceinfo):
         stdout = stdout.replace("{0}\r\n".format(command), "").replace("\r\n{0}>".format(self.host), "")
         return stdout
 
+
+    def get_config(self):
+        config = self.run("show running-config")
+        return config
+
+
     def get_sysinfo(self):
         """
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数

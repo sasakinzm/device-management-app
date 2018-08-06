@@ -42,6 +42,11 @@ class session_create_brocade(interfaceinfo):
         return stdout
 
 
+    def get_config(self):
+        config = self.run("show running-config")
+        return config
+
+
     def get_sysinfo(self):
         """
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数

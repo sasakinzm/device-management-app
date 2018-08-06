@@ -84,7 +84,7 @@ print("検索キーワード: $keyword_host $keyword_location $keyword_model $ke
 print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
 print("<tr>");
 print("<td> ホスト名 </td>");
-print("<td> 拠点 </td>");
+print("<td> Config </td>");
 print("<td> モデル名 </td>");
 print("<td> タイプ </td>");
 print("<td> 筐体シリアルナンバー </td>");
@@ -96,7 +96,7 @@ print("</tr>");
 while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
     print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['name']."</a></td>");
-    print("<td>".$row['location']."</td>");
+    print("<td><a href='../cgi-bin/get_config.cgi?hostname=".$row['name']."' target='_blank' > Config </a></td>");
     print("<td>".$row['model']."</td>");
     print("<td>".$row['type']."</td>");
     print("<td>".$row['serial']."</td>");

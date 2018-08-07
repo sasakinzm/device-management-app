@@ -43,6 +43,11 @@ class session_create_junos(interfaceinfo):
         return config
 
 
+    def get_hardware(self):
+        hardware = self.run("show chassis hardware")
+        return hardware
+
+
     def get_sysinfo(self):
         """
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数

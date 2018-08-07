@@ -39,6 +39,9 @@ class session_create:
     def get_config(self):
         return self.sess.get_config()
 
+    def get_hardware(self):
+        return self.sess.get_hardware()
+
     def get_sysinfo(self):    
         self.sess.get_sysinfo()
         self.model = self.sess.model

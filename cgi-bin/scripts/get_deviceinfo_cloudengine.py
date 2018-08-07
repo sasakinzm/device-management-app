@@ -48,6 +48,11 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
         return config
 
 
+    def get_hardware(self):
+        hardware = self.run("display sn")
+        return hardware
+
+
     def get_sysinfo(self):
         """
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数

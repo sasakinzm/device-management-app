@@ -48,6 +48,11 @@ class session_create_iosxe(interfaceinfo):
         return config
 
 
+    def get_hardware(self):
+        hardware = self.run("show inventory")
+        return hardware
+
+
     def get_sysinfo(self):
         """
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数

@@ -48,6 +48,11 @@ class session_create_netengine(interfaceinfo):
         return config
 
 
+    def get_hardware(self):
+        hardware = self.run("display inventory chassis")
+        return hardware
+
+
     def get_sysinfo(self):
         """
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数

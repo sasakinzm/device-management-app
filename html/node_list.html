@@ -85,6 +85,7 @@ print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>
 print("<tr>");
 print("<td> ホスト名 </td>");
 print("<td> Config </td>");
+print("<td> HW情報 </td>");
 print("<td> モデル名 </td>");
 print("<td> タイプ </td>");
 print("<td> 筐体シリアルナンバー </td>");
@@ -97,6 +98,7 @@ while ($row = mysql_fetch_assoc($result)) {
     print("<tr>");
     print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['name']."</a></td>");
     print("<td><a href='../cgi-bin/get_config.cgi?hostname=".$row['name']."' target='_blank' > Config </a></td>");
+    print("<td><a href='../cgi-bin/get_hardware.cgi?hostname=".$row['name']."' target='_blank' > HW情報 </a></td>");
     print("<td>".$row['model']."</td>");
     print("<td>".$row['type']."</td>");
     print("<td>".$row['serial']."</td>");

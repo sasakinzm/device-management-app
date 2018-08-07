@@ -9,7 +9,12 @@ import configparser
 sys.path.append("scripts/")
 from scripts.get_deviceinfo import *
 
+
+### フォームデータ読み込み
 form = cgi.FieldStorage()
+
+
+### 変数読み込み
 config = configparser.ConfigParser()
 config.read("scripts/config.txt")
 db_user = config["database"]["username"].replace('"', '')
@@ -20,6 +25,8 @@ username = config["device"]["username"].replace('"', '')
 password = config["device"]["password"].replace('"', '')
 domain = config["env"]["domain"].replace('"', '')
 
+
+### OSタイプ判別用ディクショナリ
 ostype_dct = {"juniper": "junos",
               "catalyst": "ios",
               "cisco": "ios",
@@ -32,6 +39,8 @@ ostype_dct = {"juniper": "junos",
               "arista": "arista"
               }
 
+
+### DB接続、コンフィグ取得
 hostname = "none"
 if "hostname" in form:
     hostname = form["hostname"].value
@@ -46,6 +55,8 @@ if "hostname" in form:
     conn.close()
     device.close()
 
+
+### HTML作成
 print("Content-type:text/html; charset=UTF-8")
 print("")
 print("<html>")

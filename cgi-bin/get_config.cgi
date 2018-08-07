@@ -70,8 +70,10 @@ print("<h1> Device Configuration of {0} </h1>".format(hostname))
 print("<hr>")
 
 try:
+    print("<pre>")
     for line in configuration:
-        print("<pre>" + line + "</pre>")
+        print(line)
+    print("</pre>")
 except:
     print("<p> Error! </p>")
 

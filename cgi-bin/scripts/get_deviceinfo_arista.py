@@ -154,6 +154,11 @@ class session_create_arista(interfaceinfo):
         return interfaces
 
 
+    def get_interface_detail(self, interface):
+        interface_detail = self.run("show interfaces {0}".format(interface))
+        return interface_detail
+
+
     def close(self):
         self.conn.close()
 

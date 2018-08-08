@@ -51,8 +51,14 @@ class session_create:
     def get_interface(self):
         return self.sess.get_interface()
 
+    def get_interface_detail(self, interface):
+        return self.sess.get_interface_detail(interface)
+
     def get_bgppeer(self):
         return self.sess.get_bgppeer()
+
+    def get_peer_detail(self, peer):
+        return self.sess.get_peer_detail(peer)
 
     def close(self):
         return self.sess.close()

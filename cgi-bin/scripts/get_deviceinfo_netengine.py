@@ -177,6 +177,11 @@ class session_create_netengine(interfaceinfo):
         return interfaces
 
 
+    def get_interface_detail(self, interface):
+        interface_detail = self.run("display interface {0}".format(interface))
+        return interface_detail
+
+
     def get_bgppeer(self):
         bgppeers = []
         peerinfo = self.run("display bgp peer verbose")
@@ -213,6 +218,11 @@ class session_create_netengine(interfaceinfo):
             bgppeers.append(bgpinfo(bgppeer_dict["addr"], bgppeer_dict["peer_type"], bgppeer_dict["state"], bgppeer_dict["asn"], bgppeer_dict["rcvroutes"], bgppeer_dict["advroutes"], bgppeer_dict["peer_description"]))
 
         return bgppeers
+
+
+    def get_peer_detail(self, peer):
+        peer_detail = self.run("display bgp peer {0} verbose".format(peer))
+        return peer_detail
 
 
     def close(self):

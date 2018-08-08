@@ -82,6 +82,12 @@ for dct in node_list:
             peer_description = peer.peer_description
             peer_description = peer_description.replace('"', '')
 
+            # 表記揺れの吸収
+            if peer_type == "IBGP":
+                peer_type = "internal"
+            elif peer_type == "EBGP":
+                peer_type = "external"
+
             sql_insert_bgppeer_list = '''
                                         INSERT
                                         INTO

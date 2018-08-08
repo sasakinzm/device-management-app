@@ -3,6 +3,7 @@
 
 import sys
 import io
+import re
 import mysql.connector
 from get_deviceinfo import *
 import configparser
@@ -70,11 +71,10 @@ for dct in node_list:
     try:
         host = dct["name"]
         ostype = dct["ostype"]
-
         session = session_create(host, domain, username, password, ostype)
         interfaces = session.get_interface()
         for i in interfaces:
-            ifname = i.name
+            interface_name = i.name
             admin_state = i.admin_state
             link_state = i.link_state
             speed = i.speed
@@ -82,6 +82,50 @@ for dct in node_list:
             lag_member = i.lag_member
             description = i.description
             media_type = i.media_type
+
+            # 表記揺れの吸収
+            if ("kbit" in speed) or ("Kbit" in speed) or ("kbps" in speed):
+                speed = re.sub("kbit.*", "", speed).strip()
+                speed = re.sub("Kbit.*", "", speed).strip()
+                speed = re.sub("kbps.*", "", speed).strip()
+                speed = re.sub("000000$","Gbps", speed)
+            if ("mbit" in speed) or ("Mbit" in speed) or ("mbps" in speed):
+                speed = re.sub("mbit.*", "", speed).strip()
+                speed = re.sub("Mbit.*", "", speed).strip()
+                speed = re.sub("mbps.*", "", speed).strip()
+                speed = re.sub("000$","Gbps", speed)
+            if "G" in speed:
+                speed = re.sub(r'\D', '', speed) + "Gbps"
+            if "Po" in interface_name:
+                if ("Port-Channel" in interface_name) or ("Port-channel" in interface_name):
+                    pass
+                else:
+                    interface_name = interface_name.replace("Po", "Port-Channel")
+            if "Po" in lag_group:
+                if ("Port-Channel" in lag_group) or ("Port-channel" in lag_group):
+                    pass
+                else:
+                    lag_group = lag_group.replace("Po", "Port-Channel")
+            if ("SX" in media_type) or (media_type == "SFP-GE-S"):
+                media_type = "1000BASE-SX"
+            if "LX" in media_type:
+                media_type = "1000BASE-LX"
+            if "LH" in media_type:
+                media_type = "1000BASE-LH"
+            if ("10G" in media_type) and ("SR" in media_type):
+                media_type = "10GBASE-SR"
+            if ("10G" in media_type) and ("LR" in media_type):
+                media_type = "10GBASE-LR"
+            if ("40G" in media_type) and ("SR4" in media_type):
+                media_type = "40GBASE-SR4"
+            if ("40G" in media_type) and ("LR4" in media_type):
+                media_type = "40GBASE-LR4"
+            if ("100G" in media_type) and ("SR4" in media_type):
+                media_type = "100GBASE-SR4"
+            if ("100G" in media_type) and ("SR10" in media_type):
+                media_type = "100GBASE-SR10"
+            if ("100G" in media_type) and ("LR4" in media_type):
+                media_type = "100GBASE-LR4"
 
             sql_insert_interface_list = '''
                                         INSERT
@@ -100,7 +144,7 @@ for dct in node_list:
                                         ) VALUES (
                                           "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}"
                                         )
-                                       '''.format(host, ifname, admin_state, link_state, speed, lag_group, lag_member, description, media_type)
+                                       '''.format(host, interface_name, admin_state, link_state, speed, lag_group, lag_member, description, media_type)
 
             cur.execute(sql_insert_interface_list)
             conn.commit()

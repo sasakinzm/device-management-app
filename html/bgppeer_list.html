@@ -97,6 +97,7 @@ if ($any_query) {
     print("<tr>");
     print("<td> ホスト名 </td>");
     print("<td> ピアアドレス </td>");
+    print("<td> </td>");
     print("<td> タイプ </td>");
     print("<td> ピア状態 </td>");
     print("<td> AS番号 </td>");
@@ -109,6 +110,7 @@ if ($any_query) {
         print("<tr>");
         print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
         print("<td>".$row['peer_address']."</td>");
+        print("<td><a href='../cgi-bin/get_peer_detail.cgi?hostname=".$row['hostname']."&peer=".$row['peer_address']."' target='_blank' > 詳細 </a></td>");
         print("<td>".$row['peer_type']."</td>");
         print("<td>".$row['state']."</td>");
         print("<td><a href='https://www.peeringdb.com/net?asn=".$row['asn']."' target='_blank'>".$row['asn']."</a></td>");

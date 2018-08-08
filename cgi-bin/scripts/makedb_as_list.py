@@ -34,9 +34,14 @@ cur = conn.cursor()
 
 
 ### AS番号、AS名取得
-### as_listテーブルの既存データを削除
-cur.execute("DELETE FROM as_list")
+### as_listテーブルを削除 & 作成
+cur.execute("DROP TABLE as_list")
 conn.commit()
+sql_create_table = '''CREATE TABLE as_list (
+                        asn varchar(10)
+                      , as_name varchar(500)
+                      )'''
+cur.execute(sql_create_table)
 
 
 ### クエリ作成し、as_list テーブルにデータ格納

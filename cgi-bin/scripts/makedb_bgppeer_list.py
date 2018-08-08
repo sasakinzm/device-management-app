@@ -87,6 +87,10 @@ for dct in node_list:
                 peer_type = "internal"
             elif peer_type == "EBGP":
                 peer_type = "external"
+            elif peer_type == "ibgp":
+                peer_type = "external"
+            elif peer_type == "ebgp":
+                peer_type = "external"
 
             sql_insert_bgppeer_list = '''
                                         INSERT

@@ -36,48 +36,60 @@ conn = mysql.connector.connect(user=db_user, password=db_pass, database=db_name,
 cur = conn.cursor()
 
 ### ノード名、ベンダー名取得
-sql_select1 = 'SELECT name, location, type, mgmt_ip FROM node_master_list'
+sql_select1 = 'SELECT name, location, ostype, mgmt_ip FROM node_master_list'
 cur.execute(sql_select1)
 data = cur.fetchall()
 
 node_list = []
 for i in data:
     param_dct = {}
-    param_dct["name"], param_dct["location"], param_dct["type"], param_dct["mgmt_ip"] = i
+    param_dct["name"], param_dct["location"], param_dct["ostype"], param_dct["mgmt_ip"] = i
     node_list.append(param_dct)
+    print(param_dct)
 
-### node_listテーブルの既存データを削除
-cur.execute("DELETE FROM node_list")
+### node_listテーブルを削除 & 作成
+cur.execute("DROP TABLE node_list")
 conn.commit()
+sql_create_table = '''CREATE TABLE node_list (
+                        name varchar(30)
+                      , location varchar(50)
+                      , model varchar(30)
+                      , vender varchar(30)
+                      , ostype varchar(15)
+                      , serial varchar(100)
+                      , version varchar(100)
+                      , mgmt_ip varchar(15)
+                      )'''
+cur.execute(sql_create_table)
+
 
 ### モデル名、シリアルNo、バージョンを取得して、
 ### [ホスト名, モデル名, ベンダー名, シリアルNo, バージョン] の順にDBに格納
 
-ostype_dct = {"juniper": "junos", 
-              "catalyst": "ios", 
-              "cisco": "ios", 
-              "asr9k": "iosxr", 
-              "asr1k": "iosxe", 
-              "nexus": "nxos",
-              "cloudengine": "cloudengine", 
-              "netengine": "netengine", 
-              "brocade": "brocade", 
-              "arista": "arista"
+vender_dct = {"junos": "Juniper",
+              "ios": "Cisco",
+              "iosxr": "Cisco",
+              "iosxe": "Cisco",
+              "nxos": "Cisco",
+              "cloudengine": "Huawei",
+              "netengine": "Huawei",
+              "brocade": "Brocade",
+              "arista": "Arista"
               }
 
 for dct in node_list:
     host = dct["name"]
     location = dct["location"]
-    type = dct["type"]
+    ostype = dct["ostype"]
     mgmt_ip = dct["mgmt_ip"]
 
     try: 
-        ostype = ostype_dct[dct["type"]]
         session = session_create(host, domain, username, password, ostype)
         session.get_sysinfo()
         model = session.model
         version = session.os_version
         serial = session.serial
+        vender = vender_dct[ostype]
 
         sql_insert_node_list = '''
                                INSERT INTO
@@ -86,14 +98,15 @@ for dct in node_list:
                                  name
                                , location
                                , model
-                               , type
+                               , vender
+                               , ostype
                                , serial
                                , version
                                , mgmt_ip
                                ) VALUES (
-                                 "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}"
+                                 "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}"
                                )
-                               '''.format(host, location, model, type, serial, version, mgmt_ip)
+                               '''.format(host, location, model, vender, ostype, serial, version, mgmt_ip)
 
         cur.execute(sql_insert_node_list)
         conn.commit()
@@ -106,14 +119,15 @@ for dct in node_list:
                                  name
                                , location
                                , model
-                               , type
+                               , vender
+                               , ostype
                                , serial
                                , version
                                , mgmt_ip
                                ) VALUES (
-                                 "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}"
+                                 "{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}"
                                )
-                               '''.format(host, location, "ERROR", type, "ERROR", "ERROR", mgmt_ip)
+                               '''.format(host, location, "ERROR", "ERROR", type, "ERROR", "ERROR", mgmt_ip)
 
         cur.execute(sql_insert_node_list)
         conn.commit()

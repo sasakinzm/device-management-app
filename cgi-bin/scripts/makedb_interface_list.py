@@ -32,38 +32,36 @@ conn = mysql.connector.connect(user=db_user, password=db_pass, database=db_name,
 cur = conn.cursor()
 
 ### ノード名、ベンダー名取得
-sql_select1 = 'SELECT name, location, type, mgmt_ip FROM node_master_list'
+sql_select1 = 'SELECT name, location, ostype, mgmt_ip FROM node_master_list'
 cur.execute(sql_select1)
 data = cur.fetchall()
 
 node_list = []
 for i in data:
     param_dct = {}
-    param_dct["name"], param_dct["location"], param_dct["type"], param_dct["mgmt_ip"] = i
+    param_dct["name"], param_dct["location"], param_dct["ostype"], param_dct["mgmt_ip"] = i
     node_list.append(param_dct)
-
-### モデル名、シリアルNo、バージョンを取得して、
-### [ホスト名, モデル名, ベンダー名, シリアルNo, バージョン] の順にDBに格納
-
-ostype_dct = {"juniper": "junos", 
-              "catalyst": "ios", 
-              "cisco": "ios", 
-              "asr9k": "iosxr", 
-              "asr1k": "iosxe", 
-              "nexus": "nxos",
-              "cloudengine": "cloudengine", 
-              "netengine": "netengine", 
-              "brocade": "brocade", 
-              "arista": "arista"
-             }
 
 
 #############################################
 ### インターフェース一覧テーブル(interface_list)作成
 
-### interface_listテーブルのデータを削除
-cur.execute("DELETE FROM interface_list")
+### interface_listテーブルを削除 & 作成
+cur.execute("DROP TABLE interface_list")
 conn.commit()
+sql_create_table = '''CREATE TABLE interface_list (
+                        hostname varchar(30)
+                      , interface_name varchar(50)
+                      , admin_state varchar(10)
+                      , link_state varchar(10)
+                      , bandwidth varchar(20)
+                      , lag_group varchar(50)
+                      , lag_member varchar(500)
+                      , description varchar(250)
+                      , media_type varchar(50)
+                      )'''
+cur.execute(sql_create_table) 
+
 
 ### モデル名取得し、それをもとにインターフェースの情報を取得
 ### [ホスト名, インターフェース名, Adminステート, リンク状態, 帯域幅, LAGグループ, LAGメンバー, Description] の順にDBに格納
@@ -71,7 +69,7 @@ conn.commit()
 for dct in node_list:
     try:
         host = dct["name"]
-        ostype = ostype_dct[dct["type"]]
+        ostype = dct["ostype"]
 
         session = session_create(host, domain, username, password, ostype)
         interfaces = session.get_interface()

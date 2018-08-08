@@ -12,7 +12,8 @@ error_reporting(E_ALL & ~ E_NOTICE);
 $keyword_host = $_GET['keyword_host'];
 $keyword_location = $_GET['keyword_location'];
 $keyword_model = $_GET['keyword_model'];
-$keyword_type = $_GET['keyword_type'];
+$keyword_vender = $_GET['keyword_vender'];
+$keyword_ostype = $_GET['keyword_ostype'];
 $keyword_os_version = $_GET['keyword_os_version'];
 $keyword_mgmt_ip = $_GET['keyword_mgmt_ip'];
 
@@ -42,7 +43,7 @@ mysql_set_charset('utf8');
 
 
 ### クエリ作成、実行
-if ($keyword_host or $keyword_location or $keyword_model or $keyword_type or $keyword_os_version or $keyword_mgmt_ip) {
+if ($keyword_host or $keyword_location or $keyword_model or $keyword_vender or $keyword_ostype or $keyword_os_version or $keyword_mgmt_ip) {
     # WHERE句作成
     $where = "WHERE";
     if ($keyword_host) {
@@ -54,8 +55,11 @@ if ($keyword_host or $keyword_location or $keyword_model or $keyword_type or $ke
     if ($keyword_model) {
         $where .= " model LIKE '{$keyword_model}' AND";
     }
-    if ($keyword_type) {
-        $where .= " type LIKE '{$keyword_type}' AND";
+    if ($keyword_vender) {
+        $where .= " vender LIKE '{$keyword_vender}' AND";
+    }
+    if ($keyword_ostype) {
+        $where .= " type LIKE '{$keyword_ostype}' AND";
     }
     if ($keyword_os_version) {
         $where .= " version LIKE '{$keyword_os_version}' AND";
@@ -79,7 +83,7 @@ if (!$result) {
 ### HTML作成
 print("<h1> Device List </h1>");
 print("行数: ".mysql_num_rows($result)."<br>");
-print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_type $keyword_os_version $keyword_mgmt_ip");
+print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_vender $keyword_ostype $keyword_os_version $keyword_mgmt_ip");
 
 print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
 print("<tr>");
@@ -87,7 +91,7 @@ print("<td> ホスト名 </td>");
 print("<td> Config </td>");
 print("<td> HW情報 </td>");
 print("<td> モデル名 </td>");
-print("<td> タイプ </td>");
+print("<td> ベンダー </td>");
 print("<td> 筐体シリアルナンバー </td>");
 print("<td> OSバージョン </td>");
 print("<td> 管理IPアドレス </td>");
@@ -100,12 +104,12 @@ while ($row = mysql_fetch_assoc($result)) {
     print("<td><a href='../cgi-bin/get_config.cgi?hostname=".$row['name']."' target='_blank' > Config </a></td>");
     print("<td><a href='../cgi-bin/get_hardware.cgi?hostname=".$row['name']."' target='_blank' > HW情報 </a></td>");
     print("<td>".$row['model']."</td>");
-    print("<td>".$row['type']."</td>");
+    print("<td>".$row['vender']."</td>");
     print("<td>".$row['serial']."</td>");
     print("<td>".$row['version']."</td>");
     print("<td><a href='telnet://".$row['name'].".".$domain."'>".$row['mgmt_ip']."</a></td>");
-    print("<td><a href='subframe_jump_node2interface.html?keyword_hostname=".$row['name']."' target='subframe'>IF一覧</a></td>");
-    print("<td><a href='subframe_jump_node2bgppeer.html?keyword_hostname=".$row['name']."' target='subframe'>BGPピア一覧</a></td>");
+    print("<td><a href='subframe_jump_node2interface.html?keyword_hostname=".$row['name']."' target='subframe'>IF情報</a></td>");
+    print("<td><a href='subframe_jump_node2bgppeer.html?keyword_hostname=".$row['name']."' target='subframe'>BGPピア</a></td>");
     print("</tr>");
 }
 

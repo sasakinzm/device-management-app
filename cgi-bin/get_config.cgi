@@ -26,30 +26,16 @@ password = config["device"]["password"].replace('"', '')
 domain = config["env"]["domain"].replace('"', '')
 
 
-### OSタイプ判別用ディクショナリ
-ostype_dct = {"juniper": "junos",
-              "catalyst": "ios",
-              "cisco": "ios",
-              "asr9k": "iosxr",
-              "asr1k": "iosxe",
-              "nexus": "nxos",
-              "cloudengine": "cloudengine",
-              "netengine": "netengine",
-              "brocade": "brocade",
-              "arista": "arista"
-              }
-
-
 ### DB接続、コンフィグ取得
 hostname = "none"
 if "hostname" in form:
     hostname = form["hostname"].value
     conn = mysql.connector.connect(user=db_user, password=db_pass, database=db_name, host=db_host)
     cur = conn.cursor()
-    cur.execute("select name, type from node_list where name='{0}'".format(hostname))
+    cur.execute("select name, ostype from node_master_list where name='{0}'".format(hostname))
     data = cur.fetchall()
-    name, type = data[0]
-    device = session_create(hostname, domain, username, password, ostype_dct[type])
+    name, ostype = data[0]
+    device = session_create(hostname, domain, username, password, ostype)
     configuration = device.get_config()
     configuration = configuration.split("\r\n")
     conn.close()
@@ -72,7 +58,7 @@ print("<hr>")
 try:
     print("<pre>")
     for line in configuration:
-        print(line)
+        print(line.replace("<", "&lt;").replace(">", "&gt;"))
     print("</pre>")
 except:
     print("<p> Error! </p>")

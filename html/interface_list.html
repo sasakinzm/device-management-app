@@ -104,6 +104,7 @@ if ($any_query) {
     print("<tr>");
     print("<td> ホスト名 </td>");
     print("<td> インターフェース </td>");
+    print("<td> </td>");
     print("<td> Adminステート </td>");
     print("<td> リンク状態 </td>");
     print("<td> 帯域幅 </td>");
@@ -116,6 +117,7 @@ if ($any_query) {
         print("<tr>");
         print("<td><a href='telnet://".$row['hostname'].".".$domain."'>".$row['hostname']."</a></td>");
         print("<td>".$row['interface_name']."</td>");
+        print("<td><a href='../cgi-bin/get_interface_detail.cgi?hostname=".$row['hostname']."&interface=".$row['interface_name']."' target='_blank' > 詳細 </a></td>");
         print("<td>".$row['admin_state']."</td>");
         print("<td>".$row['link_state']."</td>");
         print("<td>".$row['bandwidth']."</td>");

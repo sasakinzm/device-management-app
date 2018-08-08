@@ -56,7 +56,7 @@ if (empty($keyword_host_add) == false and empty($keyword_location_add) == false 
                  (
                      name
                  ,   location
-                 ,   type
+                 ,   ostype
                  ,   mgmt_ip
                  ) VALUES (
                      '{$keyword_host_add}'
@@ -74,7 +74,7 @@ if (empty($keyword_host_del) == false and empty($keyword_location_del) == false 
                  WHERE
                      name = '{$keyword_host_del}'
                  AND location = '{$keyword_location_del}'
-                 AND type = '{$keyword_type_del}'
+                 AND ostype = '{$keyword_type_del}'
                  AND mgmt_ip = '{$keyword_mgmt_ip_del}'
                ");
 }
@@ -87,7 +87,7 @@ $result_search = mysql_query("SELECT
                               WHERE
                                   name LIKE '%{$keyword_host}%'
                               AND location LIKE '%{$keyword_location}%'
-                              AND type LIKE '%{$keyword_type}%'
+                              AND ostype LIKE '%{$keyword_type}%'
                               AND mgmt_ip LIKE '%{$keyword_mgmt_ip}%'
                              ");
 
@@ -105,7 +105,7 @@ print("<table border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>
 print("<tr>");
 print("<td> ホスト名 </td>");
 print("<td> 拠点 </td>");
-print("<td> タイプ </td>");
+print("<td> OSタイプ </td>");
 print("<td> 管理IPアドレス </td>");
 print("</tr>");
 
@@ -113,7 +113,7 @@ while ($row = mysql_fetch_assoc($result_search)) {
     print("<tr>");
     print("<td>".$row['name']."</td>");
     print("<td>".$row['location']."</td>");
-    print("<td>".$row['type']."</td>");
+    print("<td>".$row['ostype']."</td>");
     print("<td>".$row['mgmt_ip']."</td>");
     print("</tr>");
 }

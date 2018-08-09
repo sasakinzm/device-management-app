@@ -1,14 +1,11 @@
 <!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.0//EN' 'http://www.w3.org/TR/html4/frameset.dtd'>
-
 <html>
-
- <head>
- <meta charset='UTF-8'>
-  <title>Node List</title>
- </head>
+<head>
+<meta charset='UTF-8'>
+<title>Node List</title>
+</head>
 
 <?php
-
 error_reporting(E_ALL & ~ E_NOTICE);
 
 ### フォームデータの変数化
@@ -18,7 +15,6 @@ print("<frameset cols='*,360'>");
 print("  <frame name='contents' src='./interface_list.html?keyword_hostname=".$keyword_hostname."&match_condition=exact'>");
 print("  <frame name='search' src='./searchform_interface_list.html?keyword_hostname=".$keyword_hostname."'>");
 print("</frameset>");
-
 ?>
 
 </html>

@@ -1,23 +1,8 @@
 <html>
 <head>
 <title>Interface List</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<style type="text/css">
-<!--
-.s-tbl {
-	border-collapse: collapse;
-}
-.s-tbl th, .s-tbl td {
-	border: 1px solid #000;
-}
-.s-tbl tr:nth-child(even) {
-	background: #eee;
-}
-.s-tbl tr:hover {
-	background: #ff0;
-}
--->
-</style>
 <body>
 
 <?php
@@ -116,7 +101,7 @@ if ($any_query) {
     }
 } else {
 # "任意のクエリ"が実行されていないとき(普通の時)
-    print("<table border=1 class='s-tbl' width='100%' style='font-size: 10pt; line-height: 110%;'>");
+    print("<table class='twotonlist'>");
     print("<tr>");
     print("<td> ホスト名 </td>");
     print("<td> インターフェース </td>");

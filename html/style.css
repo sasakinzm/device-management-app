@@ -1,0 +1,29 @@
+.twotonlist {
+	border-collapse: collapse;
+    border: 1px solid #000;
+    width: 100%;
+    font-size: 10pt;
+    line-height: 110%;
+}
+.twotonlist tr:nth-child(even) {
+	background: #eee;
+}
+.twotonlist tr:hover {
+	background: #ff0;
+}
+.twotonlist td {
+    border: 1px solid #000
+}
+
+.bgsearch {
+    background-image: url(images/icon-network.png);
+    background-repeat: no-repeat;
+    background-position: right bottom;
+    background-attachment: fixed;
+}
+
+#peercanvas {
+  width: 1200px;
+  height: 700px;
+  margin: 0px auto;
+}

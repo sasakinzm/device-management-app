@@ -1,27 +1,10 @@
 <html>
 <head>
 <title> Device List </title>
+<link rel='stylesheet' href='style.css'>
 </head>
-<style type="text/css">
-<!--
-.s-tbl {
-	border-collapse: collapse;
-}
-.s-tbl th, .s-tbl td {
-	border: 1px solid #000;
-}
-.s-tbl tr:nth-child(even) {
-	background: #eee;
-}
-.s-tbl tr:hover {
-	background: #ff0;
-}
--->
-</style>
 <body>
-
 <?php
-
 error_reporting(E_ALL & ~ E_NOTICE);
 
 ### フォームデータの変数化 
@@ -101,7 +84,7 @@ print("<h1> Device List </h1>");
 print("行数: ".mysql_num_rows($result)."<br>");
 print("検索キーワード: $keyword_host $keyword_location $keyword_model $keyword_vender $keyword_ostype $keyword_os_version $keyword_mgmt_ip");
 
-print("<table class='s-tbl' border=1 width='100%' style='font-size: 10pt; line-height: 110%;'>");
+print("<table class='twotonlist'>");
 print("<tr>");
 print("<td> ホスト名 </td>");
 print("<td> Config </td>");

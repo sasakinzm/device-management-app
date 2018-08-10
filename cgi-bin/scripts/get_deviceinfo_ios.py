@@ -60,12 +60,27 @@ class session_create_ios(interfaceinfo, bgpinfo):
         """
         ### モデル名を取得
         stdout = self.run("show inventory")
-        stdout = stdout.split("\n")[3]  # コマンドの4行目に "PID: XXXX, VID: V02,SN: XXXXXX" が出力される前提
-        stdout_list = stdout.replace(",", "").split()
-        self.model = stdout_list[1]
+        stdout = stdout.split("\r\n\r\n")[0]
+        begin = "PID:"
+        end = "\s,"
+        r = re.compile('({0}.*{1})'.format(begin, end), flags=re.DOTALL)
+        m = r.search(stdout)
+        model = ""
+        if m is not None:
+            model = m.group(0)
+        
+        self.model = model.replace("PID:", "").replace(",", "").strip()
 
         ### 筐体シリアルナンバーを取得
-        self.serial = stdout_list[-1]
+        begin = "SN:"
+        end = ""
+        r = re.compile('({0}.*{1})'.format(begin, end), flags=re.DOTALL)
+        m = r.search(stdout)
+        serial = ""
+        if m is not None:
+            serial = m.group(0)
+        
+        self.serial = serial.replace("SN:", "").strip()
 
         ### OSバージョンを取得
         stdout = self.run("show version")

@@ -45,7 +45,6 @@ for i in data:
     param_dct = {}
     param_dct["name"], param_dct["location"], param_dct["ostype"], param_dct["mgmt_ip"] = i
     node_list.append(param_dct)
-    print(param_dct)
 
 ### node_listテーブルを削除 & 作成
 cur.execute("DROP TABLE node_list")
@@ -68,6 +67,7 @@ cur.execute(sql_create_table)
 
 vender_dct = {"junos": "Juniper",
               "ios": "Cisco",
+              "ios2600": "Cisco",
               "iosxr": "Cisco",
               "iosxe": "Cisco",
               "nxos": "Cisco",

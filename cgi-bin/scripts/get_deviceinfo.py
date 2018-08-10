@@ -6,6 +6,7 @@ from get_deviceinfo_arista import *
 from get_deviceinfo_cloudengine import *
 from get_deviceinfo_netengine import *
 from get_deviceinfo_ios import *
+from get_deviceinfo_ios2600 import *
 from get_deviceinfo_iosxr import *
 from get_deviceinfo_iosxe import *
 from get_deviceinfo_brocade import *
@@ -24,6 +25,8 @@ class session_create:
             self.sess = session_create_netengine(host, domain, user, password)
         if ostype == "ios" :
             self.sess = session_create_ios(host, domain, user, password)
+        if ostype == "ios2600" :
+            self.sess = session_create_ios2600(host, domain, user, password)
         if ostype == "iosxr" :
             self.sess = session_create_iosxr(host, domain, user, password)
         if ostype == "iosxe" :

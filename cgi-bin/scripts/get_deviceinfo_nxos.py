@@ -74,6 +74,12 @@ class session_create_nxos(interfaceinfo):
         for row in stdout_list:
             if "system: " in row:
                 self.os_version = row.split(":")[1].replace("\r", "").strip()
+                break
+        for row in stdout_list:
+            if "NXOS: " in row:
+                self.os_version = row.split(":")[1].replace("\r", "").strip()
+                break
+
 
 
     def get_interface(self):

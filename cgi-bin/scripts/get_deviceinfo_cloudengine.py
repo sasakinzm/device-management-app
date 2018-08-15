@@ -49,7 +49,7 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
 
 
     def get_hardware(self):
-        hardware = self.run("display sn")
+        hardware = self.run("display device elabel")
         return hardware
 
 
@@ -58,28 +58,27 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
         装置のモデル名、OSバージョン、筐体シリアルナンバーを取得する関数
         それぞれ、name, os_version, serial というメソッドに格納する。
         """
-        ### モデル名を取得
+        ### OSバージョンを取得
         stdout = self.run("display version")
         stdout_list = stdout.split("\n")
-        for row in stdout_list:
-            if row.startswith("HUAWEI "): model_row = row   # モデル名を含む行のみを抽出
-        model = model_row.split()[1]       # モデル名のみを抽出
-        self.model = model.replace("\r", "").strip()
-
-        ### OSバージョンを取得
         for row in stdout_list:
             if "VRP (R) software," in row: version_row = row   # バージョンを含む行のみを抽出
         for row in version_row.split(","):
             if "Version " in row: version = row       # バージョン番号のみを抽出
         self.os_version = version.replace("\r", "").strip()
 
+        ### モデル名を取得
         ### 筐体シリアルナンバーを取得
-        stdout = self.run("display sn")
-        stdout_list = stdout.split("\n")
+        stdout = self.run("display device elabel")
+        stdout_list = stdout.split("\r\n")
         for row in stdout_list:
-            if row.startswith("Equipment SN"): serial_row = row   # シリアルを含む行のみを抽出
-        serial = serial_row.split(":")[1]       # シリアル番号のみを抽出
-        self.serial = serial.replace("\r", "").strip()
+            if row.startswith("BoardType="):  # モデル名を含む行のみを抽出
+                self.model = row.replace("BoardType=", "").strip()   # モデル名のみを抽出
+                break
+        for row in stdout_list:
+            if row.startswith("BarCode="):  # シリアルナンバーを含む行のみを抽出
+                self.serial = row.replace("BarCode=", "").strip()   # シリアルナンバーのみを抽出
+                break
 
 
     def get_interface(self):
@@ -198,7 +197,7 @@ class session_create_cloudengine(interfaceinfo, bgpinfo):
 
         for peer in peerinfo_list:
             bgppeer_dict = {}
-            bgppeer_dict["addr"] = peer.split()[0].replace("," "")
+            bgppeer_dict["addr"] = peer.split()[0].replace(",", "")
             for line in peer.split("\n"):
                 if "Type" in line:
                     peer_type = line.split(":")[1].replace("link", "").replace("\r", "").strip()

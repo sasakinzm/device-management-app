@@ -49,8 +49,9 @@ class session_create_netengine(interfaceinfo):
 
 
     def get_hardware(self):
-        hardware = self.run("display inventory chassis")
-        return hardware
+        chassis = self.run("display inventory chassis")
+        board = self.run("display inventory board")
+        return chassis + board
 
 
     def get_sysinfo(self):

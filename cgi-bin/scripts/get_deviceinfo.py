@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
+import sys
 from get_deviceinfo_junos import *
 from get_deviceinfo_arista import *
 from get_deviceinfo_cloudengine import *
@@ -65,3 +66,28 @@ class session_create:
 
     def close(self):
         return self.sess.close()
+
+
+if __name__ == "__main__":
+    host = sys.argv[1]
+    domain = sys.argv[2]
+    user  = sys.argv[3]
+    password = sys.argv[4]
+    ostype = sys.argv[5]
+    conn = session_create(host, domain, user, password, ostype)
+    conn.get_sysinfo()
+    print("\n1. SYS INFO\n#######################################################\n")
+    print(conn.model, conn.serial, conn.os_version)
+    print("\n2. HARDWARE INFO\n#######################################################\n")
+    print(conn.get_hardware())
+    print("\n4. CONFIG\n#######################################################\n")
+    print(conn.get_config())
+    print("\n5. INTERFACE INFO\n#######################################################\n")
+    interfaces = conn.get_interface()
+    for i in interfaces:
+        print(i.name, i.admin_state, i.link_state, i.speed, i.description, i.lag_group, i.lag_member, i.media_type)
+    print("\n6. BGP Peer INFO\n#######################################################\n")
+    bgpinfo = conn.get_bgppeer()
+    for j in bgpinfo:
+        print(j.addr, j.peer_type, j.state, j.asn, j.rcvroutes, j.advroutes, j.peer_description)
+    conn.close()

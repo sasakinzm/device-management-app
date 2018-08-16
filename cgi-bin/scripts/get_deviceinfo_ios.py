@@ -108,11 +108,13 @@ class session_create_ios(interfaceinfo, bgpinfo):
             ifname = interface.split()[0]
             if "Port-channel" in ifname:
                 temp_list = interface.split("\n")
+                lag_member = []
                 for j in temp_list:
                     if "Members in this channel:" in j:
                         lag_member = [k.strip() for k in j.replace("Members in this channel:", "").split()]
-                for j in lag_member:
-                    lag_group_dict[j] = ifname
+                if lag_member:
+                    for j in lag_member:
+                        lag_group_dict[j] = ifname
 
         ### 各インターフェースのメディアタイプを格納したディクショナリを作る(後で使う)
         media_dict = {}

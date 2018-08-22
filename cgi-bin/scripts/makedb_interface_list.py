@@ -112,10 +112,10 @@ for dct in node_list:
                 media_type = "1000BASE-LX"
             if "LH" in media_type:
                 media_type = "1000BASE-LH"
-            if ("10G" in media_type) and ("SR" in media_type):
-                media_type = "10GBASE-SR"
             if ("10G" in media_type) and ("LR" in media_type):
                 media_type = "10GBASE-LR"
+            if ("10G" in media_type) and ("SR" in media_type):
+                media_type = "10GBASE-SR"
             if ("40G" in media_type) and ("SR4" in media_type):
                 media_type = "40GBASE-SR4"
             if ("40G" in media_type) and ("LR4" in media_type):

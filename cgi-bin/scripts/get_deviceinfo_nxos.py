@@ -48,8 +48,9 @@ class session_create_nxos(interfaceinfo):
 
 
     def get_hardware(self):
-        hardware = self.run("show inventory")
-        return hardware
+        chassis = self.run("show inventory")
+        transceiver = self.run("show interface transceiver")
+        return chassis + "\n\n" + transceiver
 
 
     def get_sysinfo(self):

@@ -2,16 +2,16 @@
 # -*- coding:utf-8 -*-
 
 import sys
-from get_deviceinfo_junos import *
-from get_deviceinfo_arista import *
-from get_deviceinfo_cloudengine import *
-from get_deviceinfo_netengine import *
-from get_deviceinfo_ios import *
-from get_deviceinfo_ios2600 import *
-from get_deviceinfo_iosxr import *
-from get_deviceinfo_iosxe import *
-from get_deviceinfo_brocade import *
-from get_deviceinfo_nxos import *
+from venders.get_deviceinfo_junos import *
+from venders.get_deviceinfo_arista import *
+from venders.get_deviceinfo_cloudengine import *
+from venders.get_deviceinfo_netengine import *
+from venders.get_deviceinfo_ios import *
+from venders.get_deviceinfo_ios2600 import *
+from venders.get_deviceinfo_iosxr import *
+from venders.get_deviceinfo_iosxe import *
+from venders.get_deviceinfo_brocade import *
+from venders.get_deviceinfo_nxos import *
 
 class session_create:
     def __init__(self,host,domain,user,password,ostype):

@@ -61,8 +61,10 @@ class session_create_junos(interfaceinfo):
         self.model = model_row.split(":")[1].replace("\r", "").strip()       # モデル名のみを抽出
 
         ### OSバージョンを取得
-        self.os_version = re.search("(\[.*\])", stdout).group(0).replace("[", "").replace("]", "")  # 括弧に含まれたバージョン番号を抽出
-
+        for row in stdout_list:
+            if "Junos: " in row: os_version_row = row   # バージョンを含む行を抽出
+        self.os_version = os_version_row.split(":")[1].replace("\r", "").strip()       # "Junos:"で指定されたバージョン番号を抽出
+        
         ### 筐体シリアルナンバーを取得
         stdout = self.run("show chassis hardware")
         stdout_list = stdout.split("\n")

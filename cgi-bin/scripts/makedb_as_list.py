@@ -34,7 +34,7 @@ cur = conn.cursor()
 
 
 ### AS番号、AS名取得
-### as_listテーブルを削除 & 作成
+### as_listテーブルを削除 & 再作成
 cur.execute("DROP TABLE as_list")
 conn.commit()
 sql_create_table = '''CREATE TABLE as_list (
@@ -45,6 +45,10 @@ cur.execute(sql_create_table)
 
 
 ### クエリ作成し、as_list テーブルにデータ格納
+# bgppeer_list の中身をリストとして data に格納
+# data 内の各AS番号に対して PeeringDB の name 情報を取得し as_nam 変数に代入
+# asn と as_name を as_list テーブルの各カラムに挿入
+
 sql_select = 'SELECT distinct state, asn FROM bgppeer_list'
 cur.execute(sql_select)
 data = cur.fetchall()

@@ -33,6 +33,10 @@ conn = mysql.connector.connect(user=db_user, password=db_pass, database=db_name,
 cur = conn.cursor()
 
 ### ノード名、ベンダー名取得
+# node_master_list から name, location, ostype, mgmt_ip を抜き出し、data に保存
+# 抜き出した各データをそれぞれ name, location, ostype, mgmt_ip をキーとするディクショナリ(param_dct)を作成
+# ノード毎に作成したディクショナリをまとめてリスト(node_list)に保存
+
 sql_select1 = 'SELECT name, location, ostype, mgmt_ip FROM node_master_list'
 cur.execute(sql_select1)
 data = cur.fetchall()
@@ -47,7 +51,7 @@ for i in data:
 #############################################
 ### インターフェース一覧テーブル(interface_list)作成
 
-### interface_listテーブルを削除 & 作成
+### interface_listテーブルを削除 & 再作成
 cur.execute("DROP TABLE interface_list")
 conn.commit()
 sql_create_table = '''CREATE TABLE interface_list (
@@ -65,14 +69,36 @@ cur.execute(sql_create_table)
 
 
 ### モデル名取得し、それをもとにインターフェースの情報を取得
-### [ホスト名, インターフェース名, Adminステート, リンク状態, 帯域幅, LAGグループ, LAGメンバー, Description] の順にDBに格納
+# node_list の name を元に session_create クラスの get_interface メソッドで各インターフェースパラメータを取得
+# メーカ毎の表記揺れを吸収する
+# [ホスト名, インターフェース名, Adminステート, リンク状態, 帯域幅, LAGグループ, LAGメンバー, Description] の順に interface_list に挿入
+
+# 除外対象の不要インターフェース(内部用など)リストの作成
+unnecessary_interfaces_list = ["LoopBack0",
+                               "Loopback0",
+                               "NULL0",
+                               "Null0",
+                               "Sip5/0/0",
+                               "Sip5/0/1",
+                               "Sip6/0/0",
+                               "Sip6/0/1",
+                               "lo0",
+                               "BRI0",
+                               "BRI0:1",
+                               "BRI0:2",
+                               "Virtual-Access1",
+                               "Virtual-Access2",
+                               "Virtual-Template200"
+                               ]
 
 for dct in node_list:
+    host = dct["name"]
+    print("{0} start".format(host), flush=True)
+    ostype = dct["ostype"]
+    session = session_create(host, domain, username, password, ostype)
+    interfaces = session.get_interface()
+
     try:
-        host = dct["name"]
-        ostype = dct["ostype"]
-        session = session_create(host, domain, username, password, ostype)
-        interfaces = session.get_interface()
         for i in interfaces:
             interface_name = i.name
             admin_state = i.admin_state
@@ -83,12 +109,16 @@ for dct in node_list:
             description = i.description
             media_type = i.media_type
 
+            if interface_name in unnecessary_interfaces_list:
+                continue
+
             # 表記揺れの吸収
             if ("kbit" in speed) or ("Kbit" in speed) or ("kbps" in speed):
                 speed = re.sub("kbit.*", "", speed).strip()
                 speed = re.sub("Kbit.*", "", speed).strip()
                 speed = re.sub("kbps.*", "", speed).strip()
                 speed = re.sub("000000$","Gbps", speed)
+                speed = re.sub("000$","Mbps", speed)
             if ("mbit" in speed) or ("Mbit" in speed) or ("mbps" in speed):
                 speed = re.sub("mbit.*", "", speed).strip()
                 speed = re.sub("Mbit.*", "", speed).strip()
@@ -126,7 +156,7 @@ for dct in node_list:
                 media_type = "100GBASE-SR10"
             if ("100G" in media_type) and ("LR4" in media_type):
                 media_type = "100GBASE-LR4"
-
+            
             sql_insert_interface_list = '''
                                         INSERT
                                         INTO
@@ -151,6 +181,7 @@ for dct in node_list:
         session.close()
     except:
         pass
+    print("{0} end".format(host), flush=True)
 
 
 ### DB 切断

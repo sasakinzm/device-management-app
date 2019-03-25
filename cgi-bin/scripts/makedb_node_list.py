@@ -79,13 +79,14 @@ vender_dct = {"junos": "Juniper",
 
 for dct in node_list:
     host = dct["name"]
+    print("{0} start".format(host), flush=True)
     location = dct["location"]
     ostype = dct["ostype"]
     mgmt_ip = dct["mgmt_ip"]
+    session = session_create(host, domain, username, password, ostype)
+    session.get_sysinfo()
 
     try: 
-        session = session_create(host, domain, username, password, ostype)
-        session.get_sysinfo()
         model = session.model
         version = session.os_version
         serial = session.serial
@@ -132,6 +133,7 @@ for dct in node_list:
         cur.execute(sql_insert_node_list)
         conn.commit()
         session.close()
+    print("{0} end".format(host), flush=True)
 
 
 ### DB 切断

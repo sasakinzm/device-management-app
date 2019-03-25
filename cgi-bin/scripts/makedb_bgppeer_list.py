@@ -32,6 +32,10 @@ conn = mysql.connector.connect(user=db_user, password=db_pass, database=db_name,
 cur = conn.cursor()
 
 ### ノード名、ベンダー名取得
+# node_master_list から name, location, ostype, mgmt_ip を抜き出し、data に保存
+# 抜き出した各データをそれぞれ name, location, ostype, mgmt_ip をキーとするディクショナリ(param_dct)を作成
+# ノード毎に作成したディクショナリをまとめてリスト(node_list)に保存
+
 sql_select1 = 'SELECT name, location, ostype, mgmt_ip FROM node_master_list'
 cur.execute(sql_select1)
 data = cur.fetchall()
@@ -46,7 +50,7 @@ for i in data:
 #############################################
 ### BGPピア一覧テーブル(bgppeer_list)作成
 
-### bgppeer_listテーブルのデータを削除 & 作成
+### bgppeer_listテーブルのデータを削除 & 再作成
 cur.execute("DROP TABLE bgppeer_list")
 conn.commit()
 sql_create_table = '''CREATE TABLE bgppeer_list (
@@ -63,15 +67,18 @@ cur.execute(sql_create_table)
 
 
 ### モデル名取得し、それをもとにBGPピアの情報を取得
-### [ホスト名、ピアアドレス、タイプ、ピア状態、AS番号、受信経路数、広報経路数] の順にDBに格納
+# node_list の name を元に session_create クラスの get_bgppeer メソッドで各BGPピアの状態を取得
+# メーカ毎の表記揺れを吸収する
+# [ホスト名、ピアアドレス、タイプ、ピア状態、AS番号、受信経路数、広報経路数] の順に bgppeer_list テーブルに挿入
 
 for dct in node_list:
-    try:
-        host = dct["name"]
-        ostype = dct["ostype"]
+    host = dct["name"]
+    print("{0} start".format(host), flush=True)
+    ostype = dct["ostype"]
+    session = session_create(host, domain, username, password, ostype)
+    bgppeers = session.get_bgppeer()
 
-        session = session_create(host, domain, username, password, ostype)
-        bgppeers = session.get_bgppeer()
+    try:
         for peer in bgppeers:
             peer_address = peer.addr
             peer_type = peer.peer_type
@@ -115,6 +122,7 @@ for dct in node_list:
         session.close()
     except:
         pass
+    print("{0} end".format(host), flush=True)
 
 
 ### DB 切断

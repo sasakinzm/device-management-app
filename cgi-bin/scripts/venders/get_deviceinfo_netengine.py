@@ -99,7 +99,7 @@ class session_create_netengine(interfaceinfo):
             ifname = interface.split()[0]
             if "Eth-Trunk" in ifname:
                 temp_list = interface.split("\n")
-                line_indexs = [i for i,x in enumerate(temp_list) if x =='-----------------------------------------------------\r']
+                line_indexs = [i for i,x in enumerate(temp_list) if '------------------\r' in x]
                 member_row_list = temp_list[min(line_indexs)+3:max(line_indexs)]
                 lag_member = [i.split()[0] for i in member_row_list]
                 for j in lag_member:
@@ -123,7 +123,7 @@ class session_create_netengine(interfaceinfo):
             ### 各インターフェースに対して、Adminステートとリンク状態と帯域幅とディスクリプションを取得する
             for row in interface.split("\n"):
                 if "{0} current state :".format(interface_dict["name"]) in row:
-                    interface_dict["admin_state"] = row.split(":")[1].strip().lower()
+                    interface_dict["admin_state"] = row.split(":")[1].replace("(transceiver offline)", "").replace("(ifindex", "").strip().lower()
                 if "Line protocol current state :" in row:
                     interface_dict["link_state"] = row.split(":")[1].replace("(spoofing)", "").strip().lower()
                 if "Current BW:" in row:
@@ -186,7 +186,7 @@ class session_create_netengine(interfaceinfo):
     def get_bgppeer(self):
         bgppeers = []
         peerinfo = self.run("display bgp peer verbose")
-        peerinfo_list = peerinfo.split("\r\n\tBGP Peer is")
+        peerinfo_list = peerinfo.split("\r\n         BGP Peer is")
 
         for peer in peerinfo_list:
             bgppeer_dict = {}
